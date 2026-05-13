@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Machine Learning — LightGBM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f5f1e8; --paper-dark: #ebe5d4;
+    --ink: #1a2332; --ink-soft: #3d4859; --ink-mute: #6b7585;
+    --accent: #c8511c; --accent-soft: #e8a87c;
+    --teal: #1d6b6b; --rule: #c9bfa8; --rule-soft: #ddd4bd;
+    --green: #4a6b3a; --blue: #2c5282;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { background: var(--paper); color: var(--ink); font-family: 'Inter', sans-serif; font-size: 17px; line-height: 1.65; }
+  .container { max-width: 880px; margin: 0 auto; padding: 60px 48px 120px; }
+
+  .back-link { display: inline-flex; align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--ink-mute); text-decoration: none; margin-bottom: 48px; border-bottom: 1px dotted var(--rule); padding-bottom: 2px; transition: color 0.2s; }
+  .back-link:hover { color: var(--accent); border-bottom-color: var(--accent); }
+
+  .badge { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.2em; color: var(--paper); background: var(--ink); padding: 4px 12px; margin-bottom: 24px; }
+  .badge-num { color: var(--accent); font-size: 1.2em; }
+
+  h1 { font-family: 'Fraunces', serif; font-size: clamp(2.2rem, 5vw, 3.4rem); font-weight: 400; line-height: 1.08; letter-spacing: -0.02em; color: var(--ink); margin-bottom: 20px; font-variation-settings: "opsz" 144; }
+  h1 em { font-style: italic; color: var(--accent); }
+  .subtitle { font-family: 'Fraunces', serif; font-size: 1.2rem; font-style: italic; font-weight: 300; color: var(--ink-soft); max-width: 600px; margin-bottom: 48px; padding-bottom: 48px; border-bottom: 1px solid var(--rule); }
+  h2 { font-family: 'Fraunces', serif; font-size: 1.9rem; font-weight: 500; letter-spacing: -0.015em; color: var(--ink); margin: 56px 0 20px; font-variation-settings: "opsz" 100; }
+  h3 { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent); margin: 36px 0 12px; }
+  p { margin-bottom: 18px; color: var(--ink-soft); }
+  p strong { color: var(--ink); font-weight: 600; }
+
+  /* DIAGRAM */
+  .diagram { background: #fefcf6; border: 1px solid var(--rule); border-radius: 2px; padding: 36px 28px 28px; margin: 36px 0; position: relative; overflow: hidden; }
+  .diagram::before { content: attr(data-label); position: absolute; top: 0; left: 0; background: var(--ink); color: var(--paper); font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em; padding: 6px 14px; }
+  .diagram-caption { font-family: 'Fraunces', serif; font-style: italic; font-size: 0.95rem; color: var(--ink-mute); text-align: center; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--rule-soft); }
+  svg { max-width: 100%; height: auto; display: block; margin: 0 auto; }
+  .diag-text { font-family: 'Inter', sans-serif; font-size: 13px; fill: var(--ink); font-weight: 500; }
+  .diag-text-small { font-family: 'Inter', sans-serif; font-size: 11px; fill: var(--ink-soft); }
+  .diag-text-tiny { font-family: 'Inter', sans-serif; font-size: 10px; fill: var(--ink-mute); }
+  .diag-text-mono { font-family: 'JetBrains Mono', monospace; font-size: 11px; fill: var(--ink-soft); }
+
+  /* MÉTRIQUES */
+  .metrics-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; background: var(--rule); border: 1px solid var(--rule); margin: 32px 0; }
+  .metric { background: var(--paper); padding: 28px 24px; }
+  .metric-value { font-family: 'Fraunces', serif; font-size: 2.2rem; font-weight: 500; line-height: 1; color: var(--ink); letter-spacing: -0.02em; margin-bottom: 6px; font-variation-settings: "opsz" 100; }
+  .metric-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-mute); margin-bottom: 10px; }
+  .metric-explain { font-size: 0.88rem; color: var(--ink-soft); line-height: 1.5; }
+
+  /* EXPLICATION INLINE */
+  .explain-box { background: var(--paper-dark); border-left: 3px solid var(--accent); padding: 20px 24px; margin: 20px 0; }
+  .explain-box .label { font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--accent); margin-bottom: 8px; }
+  .explain-box p { margin: 0; font-size: 0.95rem; }
+
+  /* TIMELINE LAG */
+  .lag-timeline { margin: 28px 0; overflow-x: auto; }
+  .lag-row { display: flex; align-items: center; gap: 0; margin-bottom: 8px; }
+  .lag-cell { flex: 1; min-width: 64px; text-align: center; padding: 10px 4px; font-family: 'JetBrains Mono', monospace; font-size: 11px; border: 1px solid var(--rule-soft); background: var(--paper); position: relative; }
+  .lag-cell.current { background: var(--ink); color: var(--paper); border-color: var(--ink); font-weight: 600; }
+  .lag-cell.lag { background: rgba(200, 81, 28, 0.08); border-color: var(--accent); }
+  .lag-cell .lag-name { font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-mute); display: block; margin-top: 4px; }
+  .lag-cell.lag .lag-name { color: var(--accent); }
+  .lag-cell.current .lag-name { color: rgba(255,255,255,0.6); }
+  .lag-arrow { font-size: 18px; color: var(--accent); flex: 0 0 auto; }
+  .lag-header .lag-cell { background: var(--paper-dark); font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-mute); padding: 6px 4px; border: none; }
+
+  /* COMPARE */
+  .compare-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--rule); margin: 28px 0; }
+  .compare-cell { background: var(--paper); padding: 24px; }
+  .compare-cell h3 { margin-top: 0; }
+  .compare-cell .val { font-family: 'Fraunces', serif; font-size: 1.8rem; font-weight: 500; color: var(--ink); }
+  .compare-cell .lbl { font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-mute); }
+
+  /* FEATURE TABLE */
+  .feature-table { width: 100%; border-collapse: collapse; margin: 24px 0; font-size: 0.93rem; }
+  .feature-table th { font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--ink-mute); padding: 10px 14px; border-bottom: 2px solid var(--ink); text-align: left; }
+  .feature-table td { padding: 12px 14px; border-bottom: 1px solid var(--rule-soft); color: var(--ink-soft); vertical-align: top; }
+  .feature-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--teal); }
+  .feature-table tr.group-header td { background: var(--paper-dark); font-weight: 600; color: var(--ink); font-family: 'Inter', sans-serif; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; padding: 8px 14px; }
+
+  .code-block { background: var(--ink); color: #c9d1d9; font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.7; padding: 24px 28px; margin: 24px 0; border-radius: 2px; overflow-x: auto; }
+  .code-block .kw { color: #ff7b72; }
+  .code-block .fn { color: #79c0ff; }
+  .code-block .str { color: #a5d6ff; }
+  .code-block .cm { color: #6b7585; font-style: italic; }
+  .code-block .num { color: #f2cc60; }
+
+  @media (max-width: 640px) {
+    .container { padding: 40px 20px 80px; }
+    .compare-row { grid-template-columns: 1fr; }
+    .metrics-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <a class="back-link" href="synthese_modele_eau.html">← Retour à la synthèse</a>
+
+  <div class="badge"><span class="badge-num">03</span> &nbsp;·&nbsp; Machine Learning</div>
+  <h1>Gradient Boosting — <em>LightGBM</em></h1>
+  <p class="subtitle">
+    Oui, c'est du machine learning. Le modèle apprend tout seul à combiner
+    l'heure, le jour, la saison et le passé récent pour prédire le débit —
+    sans qu'on lui explique les règles.
+  </p>
+
+  <!-- ═══════════════════════════════════════════════════
+       1. C'EST QUOI LE MACHINE LEARNING ICI ?
+  ════════════════════════════════════════════════════ -->
+  <h2>C'est quoi le machine learning ici ?</h2>
+
+  <p>
+    L'idée est de transformer le problème en une question classique :
+    <strong>étant donné ce qu'on sait à l'instant t (heure, jour, mois, valeurs passées…),
+    quel sera le débit ?</strong>
+  </p>
+  <p>
+    On donne au modèle des milliers d'exemples passés — chaque ligne est un instant t
+    avec toutes ses informations et la vraie valeur du débit observée.
+    Le modèle apprend à reproduire ces valeurs, puis generalise sur de nouveaux instants.
+  </p>
+
+  <div class="diagram" data-label="Fig. 03a — De la série temporelle à la régression supervisée">
+    <svg viewBox="0 0 720 260" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="#3d4859" stroke-width="1.5" stroke-linecap="round"/>
+        </marker>
+      </defs>
+
+      <!-- Titre colonnes -->
+      <text class="diag-text-tiny" x="160" y="28" text-anchor="middle">CE QU'ON SAIT</text>
+      <text class="diag-text-tiny" x="500" y="28" text-anchor="middle">CE QU'ON VEUT PRÉDIRE</text>
+
+      <!-- En-têtes -->
+      <rect x="20" y="38" width="80" height="26" fill="#3d4859"/>
+      <text style="font-family:JetBrains Mono,monospace;font-size:9px;fill:#f5f1e8" x="60" y="55" text-anchor="middle">heure</text>
+      <rect x="102" y="38" width="80" height="26" fill="#3d4859"/>
+      <text style="font-family:JetBrains Mono,monospace;font-size:9px;fill:#f5f1e8" x="142" y="55" text-anchor="middle">jour_sem</text>
+      <rect x="184" y="38" width="70" height="26" fill="#3d4859"/>
+      <text style="font-family:JetBrains Mono,monospace;font-size:9px;fill:#f5f1e8" x="219" y="55" text-anchor="middle">mois</text>
+      <rect x="256" y="38" width="70" height="26" fill="#3d4859"/>
+      <text style="font-family:JetBrains Mono,monospace;font-size:9px;fill:#f5f1e8" x="291" y="55" text-anchor="middle">été?</text>
+      <rect x="328" y="38" width="80" height="26" fill="#3d4859"/>
+      <text style="font-family:JetBrains Mono,monospace;font-size:9px;fill:#f5f1e8" x="368" y="55" text-anchor="middle">lag_24h</text>
+      <rect x="450" y="38" width="240" height="26" fill="#a83d12"/>
+      <text style="font-family:JetBrains Mono,monospace;font-size:9px;fill:#f5f1e8" x="570" y="55" text-anchor="middle">débit (valeur à prédire)</text>
+
+      <!-- Ligne 1 : lundi matin hiver -->
+      <rect x="20" y="66" width="80" height="30" fill="#f5f1e8" stroke="#ddd4bd"/>
+      <text class="diag-text-mono" x="60" y="85" text-anchor="middle">8h05</text>
+      <rect x="102" y="66" width="80" height="30" fill="#f5f1e8" stroke="#ddd4bd"/>
+      <text class="diag-text-mono" x="142" y="85" text-anchor="middle">lundi</text>
+      <rect x="184" y="66" width="70" height="30" fill="#f5f1e8" stroke="#ddd4bd"/>
+      <text class="diag-text-mono" x="219" y="85" text-anchor="middle">jan.</text>
+      <rect x="256" y="66" width="70" height="30" fill="#f5f1e8" stroke="#ddd4bd"/>
+      <text class="diag-text-mono" x="291" y="85" text-anchor="middle">0</text>
+      <rect x="328" y="66" width="80" height="30" fill="#f5f1e8" stroke="#ddd4bd"/>
+      <text class="diag-text-mono" x="368" y="85" text-anchor="middle">79</text>
+      <rect x="450" y="66" width="240" height="30" fill="rgba(200,81,28,0.08)" stroke="#c8511c" stroke-width="0.8"/>
+      <text class="diag-text-mono" x="570" y="85" text-anchor="middle" fill="#c8511c">91,4 m³/h</text>
+
+      <!-- Ligne 2 : samedi matin été -->
+      <rect x="20" y="98" width="80" height="30" fill="#f5f1e8" stroke="#ddd4bd"/>
+      <text class="diag-text-mono" x="60" y="117" text-anchor="middle">10h20</text>
+      <rect x="102" y="98" width="80" height="30" fill="#f5f1e8" stroke="#ddd4bd"/>
+      <text class="diag-text-mono" x="142" y="117" text-anchor="middle">samedi</text>
+      <rect x="184" y="98" width="70" height="30" fill="#f5f1e8" stroke="#ddd4bd"/>
+      <text class="diag-text-mono" x="219" y="117" text-anchor="middle">juil.</text>
+      <rect x="256" y="98" width="70" height="30" fill="#f5f1e8" stroke="#ddd4bd"/>
+      <text class="diag-text-mono" x="291" y="117" text-anchor="middle">1</text>
+      <rect x="328" y="98" width="80" height="30" fill="#f5f1e8" stroke="#ddd4bd"/>
+      <text class="diag-text-mono" x="368" y="117" text-anchor="middle">104</text>
+      <rect x="450" y="98" width="240" height="30" fill="rgba(200,81,28,0.08)" stroke="#c8511c" stroke-width="0.8"/>
+      <text class="diag-text-mono" x="570" y="117" text-anchor="middle" fill="#c8511c">118,7 m³/h</text>
+
+      <!-- Ligne 3 : nuit dimanche hiver -->
+      <rect x="20" y="130" width="80" height="30" fill="#f5f1e8" stroke="#ddd4bd"/>
+      <text class="diag-text-mono" x="60" y="149" text-anchor="middle">3h00</text>
+      <rect x="102" y="130" width="80" height="30" fill="#f5f1e8" stroke="#ddd4bd"/>
+      <text class="diag-text-mono" x="142" y="149" text-anchor="middle">dimanche</text>
+      <rect x="184" y="130" width="70" height="30" fill="#f5f1e8" stroke="#ddd4bd"/>
+      <text class="diag-text-mono" x="219" y="149" text-anchor="middle">fév.</text>
+      <rect x="256" y="130" width="70" height="30" fill="#f5f1e8" stroke="#ddd4bd"/>
+      <text class="diag-text-mono" x="291" y="149" text-anchor="middle">0</text>
+      <rect x="328" y="130" width="80" height="30" fill="#f5f1e8" stroke="#ddd4bd"/>
+      <text class="diag-text-mono" x="368" y="149" text-anchor="middle">55</text>
+      <rect x="450" y="130" width="240" height="30" fill="rgba(200,81,28,0.08)" stroke="#c8511c" stroke-width="0.8"/>
+      <text class="diag-text-mono" x="570" y="149" text-anchor="middle" fill="#c8511c">52,1 m³/h</text>
+
+      <text class="diag-text-tiny" x="360" y="180" text-anchor="middle">⋮ 547 510 lignes d'apprentissage ⋮</text>
+
+      <!-- Flèche apprentissage -->
+      <text class="diag-text-small" x="360" y="220" text-anchor="middle">Le modèle apprend les règles qui relient les colonnes grises à la colonne orange</text>
+      <text class="diag-text-small" x="360" y="240" text-anchor="middle" font-style="italic">sans qu'on lui explique quoi que ce soit</text>
+    </svg>
+    <div class="diagram-caption">
+      Chaque instant devient une ligne. Le modèle apprend à prédire la colonne orange à partir des grises.
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════
+       2. CYCLES IMPLICITES vs EXPLICITES
+  ════════════════════════════════════════════════════ -->
+  <h2>LightGBM capture-t-il les cycles ?</h2>
+
+  <p>
+    <strong>Oui — mais de façon implicite.</strong> C'est la différence fondamentale
+    avec Prophet.
+  </p>
+  <p>
+    Prophet <em>décompose explicitement</em> la série : il nomme et affiche chaque
+    composante (tendance, cycle journalier, cycle hebdo, cycle annuel).
+    LightGBM, lui, ne les nomme jamais — il apprend les mêmes effets
+    <em>en se servant des features</em> qui encodent ces cycles.
+  </p>
+
+  <div class="diagram" data-label="Fig. 03b — Comment chaque cycle est capturé">
+    <svg viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg">
+
+      <!-- En-têtes colonnes -->
+      <text class="diag-text-tiny" x="140" y="22" text-anchor="middle" fill="#6b7585">CYCLE / EFFET</text>
+      <text class="diag-text-tiny" x="380" y="22" text-anchor="middle" fill="#6b7585">FEATURES DANS LIGHTGBM</text>
+      <text class="diag-text-tiny" x="620" y="22" text-anchor="middle" fill="#6b7585">CE QUE LE MODÈLE APPREND</text>
+      <line x1="10" y1="28" x2="750" y2="28" stroke="#c9bfa8" stroke-width="1"/>
+
+      <!-- Ligne 1 : Tendance -->
+      <rect x="10" y="36" width="260" height="46" rx="3" fill="#f5f1e8" stroke="#c9bfa8"/>
+      <text class="diag-text" x="140" y="56" text-anchor="middle" fill="#1a2332" font-size="12">Tendance (hausse sur 2 ans)</text>
+      <text class="diag-text-small" x="140" y="73" text-anchor="middle" fill="#6b7585" font-size="10">légère dérive globale</text>
+
+      <rect x="278" y="36" width="240" height="46" rx="3" fill="#e8f0fa" stroke="#2c5282"/>
+      <text class="diag-text-mono" x="398" y="56" text-anchor="middle" fill="#2c5282" font-size="11">annee</text>
+      <text class="diag-text-small" x="398" y="73" text-anchor="middle" fill="#2c5282" font-size="10">2023 → 2024 → …</text>
+
+      <rect x="526" y="36" width="224" height="46" rx="3" fill="#f5f1e8" stroke="#c9bfa8"/>
+      <text class="diag-text-small" x="638" y="56" text-anchor="middle" fill="#3d4859" font-size="11">Débits 2024 légèrement</text>
+      <text class="diag-text-small" x="638" y="72" text-anchor="middle" fill="#3d4859" font-size="11">supérieurs à 2023</text>
+
+      <!-- Ligne 2 : Cycle journalier -->
+      <rect x="10" y="90" width="260" height="46" rx="3" fill="#fff4d6" stroke="#a87820"/>
+      <text class="diag-text" x="140" y="110" text-anchor="middle" fill="#1a2332" font-size="12">Cycle journalier</text>
+      <text class="diag-text-small" x="140" y="127" text-anchor="middle" fill="#a87820" font-size="10">pics 7h30 et 19h</text>
+
+      <rect x="278" y="90" width="240" height="46" rx="3" fill="#e8f0fa" stroke="#2c5282"/>
+      <text class="diag-text-mono" x="398" y="108" text-anchor="middle" fill="#2c5282" font-size="11">heure, minute</text>
+      <text class="diag-text-mono" x="398" y="124" text-anchor="middle" fill="#2c5282" font-size="11">heure_sin, heure_cos</text>
+
+      <rect x="526" y="90" width="224" height="46" rx="3" fill="#f5f1e8" stroke="#c9bfa8"/>
+      <text class="diag-text-small" x="638" y="110" text-anchor="middle" fill="#3d4859" font-size="11">heure=8 → débit élevé</text>
+      <text class="diag-text-small" x="638" y="126" text-anchor="middle" fill="#3d4859" font-size="11">heure=3 → débit bas</text>
+
+      <!-- Ligne 3 : Cycle hebdo -->
+      <rect x="10" y="144" width="260" height="46" rx="3" fill="#fef0e8" stroke="#c8511c"/>
+      <text class="diag-text" x="140" y="164" text-anchor="middle" fill="#1a2332" font-size="12">Cycle hebdomadaire</text>
+      <text class="diag-text-small" x="140" y="181" text-anchor="middle" fill="#c8511c" font-size="10">weekend −15% vs semaine</text>
+
+      <rect x="278" y="144" width="240" height="46" rx="3" fill="#e8f0fa" stroke="#2c5282"/>
+      <text class="diag-text-mono" x="398" y="162" text-anchor="middle" fill="#2c5282" font-size="11">jour_semaine, est_weekend</text>
+      <text class="diag-text-mono" x="398" y="178" text-anchor="middle" fill="#2c5282" font-size="11">jour_sem_sin, jour_sem_cos</text>
+
+      <rect x="526" y="144" width="224" height="46" rx="3" fill="#f5f1e8" stroke="#c9bfa8"/>
+      <text class="diag-text-small" x="638" y="164" text-anchor="middle" fill="#3d4859" font-size="11">samedi → léger décalage</text>
+      <text class="diag-text-small" x="638" y="180" text-anchor="middle" fill="#3d4859" font-size="11">pic matin repoussé à 10h</text>
+
+      <!-- Ligne 4 : Cycle annuel -->
+      <rect x="10" y="198" width="260" height="46" rx="3" fill="#e8f4f0" stroke="#1d6b6b"/>
+      <text class="diag-text" x="140" y="218" text-anchor="middle" fill="#1a2332" font-size="12">Cycle annuel</text>
+      <text class="diag-text-small" x="140" y="235" text-anchor="middle" fill="#1d6b6b" font-size="10">été +20%, hiver −10%</text>
+
+      <rect x="278" y="198" width="240" height="46" rx="3" fill="#e8f0fa" stroke="#2c5282"/>
+      <text class="diag-text-mono" x="398" y="216" text-anchor="middle" fill="#2c5282" font-size="11">mois, jour_annee</text>
+      <text class="diag-text-mono" x="398" y="232" text-anchor="middle" fill="#2c5282" font-size="11">mois_sin/cos, est_vacances_ete</text>
+
+      <rect x="526" y="198" width="224" height="46" rx="3" fill="#f5f1e8" stroke="#c9bfa8"/>
+      <text class="diag-text-small" x="638" y="218" text-anchor="middle" fill="#3d4859" font-size="11">mois=7 ou 8 → débit</text>
+      <text class="diag-text-small" x="638" y="234" text-anchor="middle" fill="#3d4859" font-size="11">+20% (arrosage, piscines)</text>
+
+      <!-- Séparateurs verticaux -->
+      <line x1="272" y1="30" x2="272" y2="250" stroke="#c9bfa8" stroke-width="1" stroke-dasharray="4,3"/>
+      <line x1="520" y1="30" x2="520" y2="250" stroke="#c9bfa8" stroke-width="1" stroke-dasharray="4,3"/>
+
+      <text class="diag-text-small" x="380" y="278" text-anchor="middle" font-style="italic" fill="#6b7585">LightGBM apprend ces effets implicitement — il ne les nomme pas, mais ils sont bien là dans les arbres</text>
+    </svg>
+    <div class="diagram-caption">
+      Chaque cycle de Prophet correspond à un groupe de features dans LightGBM.
+      Le résultat appris est le même, la représentation est différente.
+    </div>
+  </div>
+
+  <h2>L'arbre de décision — avec la saison dans les deux branches</h2>
+
+  <p>
+    Tu as raison : mon arbre précédent était <strong>faux</strong>.
+    Il ne montrait la saison que dans la branche "semaine".
+    Or en réalité, la saison joue aussi le weekend (été = arrosage de jardins,
+    piscines, même le samedi). LightGBM peut poser la question
+    <em>mois ∈ été ?</em> dans <strong>n'importe quelle branche</strong>.
+  </p>
+  <p>
+    Voici un arbre corrigé, avec la saison à la racine — ce qui est plus honnête :
+    la saison conditionne tout le reste.
+  </p>
+
+  <div class="diagram" data-label="Fig. 03c — Arbre corrigé : saison à la racine">
+    <svg viewBox="0 0 820 580" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arrt" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="#6b7585" stroke-width="1.2" stroke-linecap="round"/>
+        </marker>
+      </defs>
+
+      <!-- ── NIVEAU 0 : SAISON ── -->
+      <rect x="290" y="8" width="240" height="50" rx="6" fill="#fff4d6" stroke="#a87820" stroke-width="2"/>
+      <text class="diag-text" x="410" y="28" text-anchor="middle" fill="#1a2332" font-size="13">été ? (juil.–août)</text>
+      <text class="diag-text-small" x="410" y="47" text-anchor="middle" fill="#a87820" font-size="11">cycle annuel — mois ∈ {7, 8}</text>
+
+      <!-- Branche HIVER (gauche) -->
+      <line x1="330" y1="58" x2="180" y2="118" stroke="#2c5282" stroke-width="1.8" marker-end="url(#arrt)"/>
+      <text style="font-family:Inter,sans-serif;font-size:11px;fill:#2c5282;font-weight:600" x="220" y="99">NON — hiver/printemps</text>
+
+      <!-- Branche ÉTÉ (droite) -->
+      <line x1="490" y1="58" x2="635" y2="118" stroke="#a87820" stroke-width="1.8" marker-end="url(#arrt)"/>
+      <text style="font-family:Inter,sans-serif;font-size:11px;fill:#a87820;font-weight:600" x="595" y="99">OUI — été</text>
+
+      <!-- ── NIVEAU 1 gauche : WEEKEND (hiver) ── -->
+      <rect x="55" y="122" width="240" height="50" rx="6" fill="#fef0e8" stroke="#c8511c" stroke-width="2"/>
+      <text class="diag-text" x="175" y="143" text-anchor="middle" fill="#1a2332" font-size="13">weekend ?</text>
+      <text class="diag-text-small" x="175" y="162" text-anchor="middle" fill="#c8511c" font-size="11">cycle hebdo — sam. ou dim. ?</text>
+
+      <!-- ── NIVEAU 1 droite : WEEKEND (été) ── -->
+      <rect x="510" y="122" width="240" height="50" rx="6" fill="#fef0e8" stroke="#c8511c" stroke-width="2"/>
+      <text class="diag-text" x="630" y="143" text-anchor="middle" fill="#1a2332" font-size="13">weekend ?</text>
+      <text class="diag-text-small" x="630" y="162" text-anchor="middle" fill="#c8511c" font-size="11">cycle hebdo — sam. ou dim. ?</text>
+
+      <!-- Branche hiver semaine -->
+      <line x1="115" y1="172" x2="80" y2="232" stroke="#4a6b3a" stroke-width="1.2" marker-end="url(#arrt)"/>
+      <text style="font-family:Inter,sans-serif;font-size:10px;fill:#4a6b3a;font-weight:600" x="55" y="215">NON</text>
+      <!-- Branche hiver weekend -->
+      <line x1="235" y1="172" x2="260" y2="232" stroke="#c8511c" stroke-width="1.2" marker-end="url(#arrt)"/>
+      <text style="font-family:Inter,sans-serif;font-size:10px;fill:#c8511c;font-weight:600" x="248" y="215">OUI</text>
+
+      <!-- Branche été semaine -->
+      <line x1="570" y1="172" x2="530" y2="232" stroke="#4a6b3a" stroke-width="1.2" marker-end="url(#arrt)"/>
+      <text style="font-family:Inter,sans-serif;font-size:10px;fill:#4a6b3a;font-weight:600" x="508" y="215">NON</text>
+      <!-- Branche été weekend -->
+      <line x1="690" y1="172" x2="725" y2="232" stroke="#c8511c" stroke-width="1.2" marker-end="url(#arrt)"/>
+      <text style="font-family:Inter,sans-serif;font-size:10px;fill:#c8511c;font-weight:600" x="710" y="215">OUI</text>
+
+      <!-- ── NIVEAU 2 : HEURE ── -->
+      <!-- Hiver semaine -->
+      <rect x="15" y="236" width="155" height="50" rx="5" fill="#e8f4f0" stroke="#1d6b6b" stroke-width="1.5"/>
+      <text class="diag-text" x="92" y="256" text-anchor="middle" fill="#1a2332" font-size="12">heure ∈ [7,9] ?</text>
+      <text class="diag-text-small" x="92" y="275" text-anchor="middle" fill="#1d6b6b" font-size="10">pic matin — cycle journ.</text>
+
+      <!-- Hiver weekend -->
+      <rect x="188" y="236" width="155" height="50" rx="5" fill="#e8f4f0" stroke="#1d6b6b" stroke-width="1.5"/>
+      <text class="diag-text" x="265" y="256" text-anchor="middle" fill="#1a2332" font-size="12">heure ∈ [10,12] ?</text>
+      <text class="diag-text-small" x="265" y="275" text-anchor="middle" fill="#1d6b6b" font-size="10">pic tardif weekend</text>
+
+      <!-- Été semaine -->
+      <rect x="385" y="236" width="165" height="50" rx="5" fill="#e8f4f0" stroke="#1d6b6b" stroke-width="1.5"/>
+      <text class="diag-text" x="467" y="256" text-anchor="middle" fill="#1a2332" font-size="12">heure ∈ [18,21] ?</text>
+      <text class="diag-text-small" x="467" y="275" text-anchor="middle" fill="#1d6b6b" font-size="10">pic soir + arrosage</text>
+
+      <!-- Été weekend -->
+      <rect x="568" y="236" width="165" height="50" rx="5" fill="#e8f4f0" stroke="#1d6b6b" stroke-width="1.5"/>
+      <text class="diag-text" x="650" y="256" text-anchor="middle" fill="#1a2332" font-size="12">heure ∈ [10,20] ?</text>
+      <text class="diag-text-small" x="650" y="275" text-anchor="middle" fill="#1d6b6b" font-size="10">journée active été+we</text>
+
+      <!-- Branches niveau 2 → feuilles -->
+      <line x1="55" y1="286" x2="40" y2="346" stroke="#4a6b3a" stroke-width="1.1" marker-end="url(#arrt)"/>
+      <line x1="128" y1="286" x2="140" y2="346" stroke="#c8511c" stroke-width="1.1" marker-end="url(#arrt)"/>
+      <line x1="225" y1="286" x2="210" y2="346" stroke="#4a6b3a" stroke-width="1.1" marker-end="url(#arrt)"/>
+      <line x1="305" y1="286" x2="318" y2="346" stroke="#c8511c" stroke-width="1.1" marker-end="url(#arrt)"/>
+      <line x1="425" y1="286" x2="410" y2="346" stroke="#4a6b3a" stroke-width="1.1" marker-end="url(#arrt)"/>
+      <line x1="510" y1="286" x2="522" y2="346" stroke="#c8511c" stroke-width="1.1" marker-end="url(#arrt)"/>
+      <line x1="608" y1="286" x2="592" y2="346" stroke="#4a6b3a" stroke-width="1.1" marker-end="url(#arrt)"/>
+      <line x1="695" y1="286" x2="706" y2="346" stroke="#c8511c" stroke-width="1.1" marker-end="url(#arrt)"/>
+
+      <!-- ── FEUILLES ── -->
+      <rect x="8" y="350" width="90" height="48" rx="4" fill="#e8effa" stroke="#2c5282"/>
+      <text class="diag-text" x="53" y="368" text-anchor="middle" fill="#1a3060" font-size="11">≈ 70 m³/h</text>
+      <text class="diag-text-tiny" x="53" y="382" text-anchor="middle" fill="#2c5282">hiver nuit</text>
+      <text class="diag-text-tiny" x="53" y="393" text-anchor="middle" fill="#2c5282">semaine</text>
+
+      <rect x="104" y="350" width="90" height="48" rx="4" fill="#d8e3e1" stroke="#1d6b6b"/>
+      <text class="diag-text" x="149" y="368" text-anchor="middle" fill="#0d4040" font-size="11">≈ 105 m³/h</text>
+      <text class="diag-text-tiny" x="149" y="382" text-anchor="middle" fill="#1d6b6b">pic matin</text>
+      <text class="diag-text-tiny" x="149" y="393" text-anchor="middle" fill="#1d6b6b">hiver semaine</text>
+
+      <rect x="180" y="350" width="90" height="48" rx="4" fill="#e8effa" stroke="#2c5282"/>
+      <text class="diag-text" x="225" y="368" text-anchor="middle" fill="#1a3060" font-size="11">≈ 55 m³/h</text>
+      <text class="diag-text-tiny" x="225" y="382" text-anchor="middle" fill="#2c5282">hiver nuit</text>
+      <text class="diag-text-tiny" x="225" y="393" text-anchor="middle" fill="#2c5282">weekend</text>
+
+      <rect x="275" y="350" width="90" height="48" rx="4" fill="#d8e3e1" stroke="#1d6b6b"/>
+      <text class="diag-text" x="320" y="368" text-anchor="middle" fill="#0d4040" font-size="11">≈ 85 m³/h</text>
+      <text class="diag-text-tiny" x="320" y="382" text-anchor="middle" fill="#1d6b6b">matinée</text>
+      <text class="diag-text-tiny" x="320" y="393" text-anchor="middle" fill="#1d6b6b">weekend hiver</text>
+
+      <rect x="372" y="350" width="95" height="48" rx="4" fill="#fef8e8" stroke="#a87820"/>
+      <text class="diag-text" x="419" y="368" text-anchor="middle" fill="#5c4010" font-size="11">≈ 90 m³/h</text>
+      <text class="diag-text-tiny" x="419" y="382" text-anchor="middle" fill="#a87820">journée été</text>
+      <text class="diag-text-tiny" x="419" y="393" text-anchor="middle" fill="#a87820">semaine</text>
+
+      <rect x="473" y="350" width="95" height="48" rx="4" fill="#d8e3e1" stroke="#1d6b6b"/>
+      <text class="diag-text" x="520" y="368" text-anchor="middle" fill="#0d4040" font-size="11">≈ 124 m³/h</text>
+      <text class="diag-text-tiny" x="520" y="382" text-anchor="middle" fill="#1d6b6b">pic soir été</text>
+      <text class="diag-text-tiny" x="520" y="393" text-anchor="middle" fill="#1d6b6b">+ arrosage</text>
+
+      <rect x="556" y="350" width="96" height="48" rx="4" fill="#fef8e8" stroke="#a87820"/>
+      <text class="diag-text" x="604" y="368" text-anchor="middle" fill="#5c4010" font-size="11">≈ 65 m³/h</text>
+      <text class="diag-text-tiny" x="604" y="382" text-anchor="middle" fill="#a87820">été nuit</text>
+      <text class="diag-text-tiny" x="604" y="393" text-anchor="middle" fill="#a87820">weekend</text>
+
+      <rect x="659" y="350" width="96" height="48" rx="4" fill="#d8e3e1" stroke="#1d6b6b"/>
+      <text class="diag-text" x="707" y="368" text-anchor="middle" fill="#0d4040" font-size="11">≈ 118 m³/h</text>
+      <text class="diag-text-tiny" x="707" y="382" text-anchor="middle" fill="#1d6b6b">journée active</text>
+      <text class="diag-text-tiny" x="707" y="393" text-anchor="middle" fill="#1d6b6b">été weekend</text>
+
+      <!-- Légende couleurs nœuds -->
+      <rect x="10" y="428" width="12" height="12" rx="2" fill="#fff4d6" stroke="#a87820" stroke-width="1.5"/>
+      <text class="diag-text-small" x="28" y="440" fill="#a87820">Saison/mois</text>
+      <rect x="140" y="428" width="12" height="12" rx="2" fill="#fef0e8" stroke="#c8511c" stroke-width="1.5"/>
+      <text class="diag-text-small" x="158" y="440" fill="#c8511c">Weekend (hebdo)</text>
+      <rect x="295" y="428" width="12" height="12" rx="2" fill="#e8f4f0" stroke="#1d6b6b" stroke-width="1.5"/>
+      <text class="diag-text-small" x="313" y="440" fill="#1d6b6b">Heure (journalier)</text>
+      <rect x="450" y="428" width="12" height="12" rx="2" fill="#e8effa" stroke="#2c5282"/>
+      <text class="diag-text-small" x="468" y="440" fill="#2c5282">Feuille (débit bas)</text>
+      <rect x="590" y="428" width="12" height="12" rx="2" fill="#d8e3e1" stroke="#1d6b6b"/>
+      <text class="diag-text-small" x="608" y="440" fill="#1d6b6b">Feuille (débit élevé)</text>
+
+      <text class="diag-text-small" x="410" y="478" text-anchor="middle" fill="#6b7585" font-style="italic">La saison est à la racine → elle conditionne TOUTES les branches, y compris weekend</text>
+      <text class="diag-text-small" x="410" y="498" text-anchor="middle" fill="#6b7585" font-style="italic">Un arbre LightGBM réel peut avoir 63 feuilles et 6+ niveaux — ceci est très simplifié</text>
+    </svg>
+    <div class="diagram-caption">
+      Arbre corrigé : la saison est à la racine, les cycles hebdo et journalier s'appliquent
+      dans <em>chaque</em> branche saisonnière. Été weekend et Hiver weekend ont des profils différents.
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════
+       3. C'EST QUOI LES LAGS ?
+  ════════════════════════════════════════════════════ -->
+  <h2>C'est quoi les lags ?</h2>
+
+  <p>
+    Un <strong>lag</strong> est simplement la valeur du débit à un instant passé.
+    "Lag 24h" = le débit mesuré exactement 24 heures avant l'instant qu'on veut prédire.
+  </p>
+
+  <div class="explain-box">
+    <div class="label">Intuition</div>
+    <p>
+      Si à 8h hier il y avait 95 m³/h, il y a de bonnes chances qu'à 8h aujourd'hui
+      on soit proche de cette valeur — sauf événement exceptionnel.
+      Le lag capture cette <strong>inertie</strong> de la consommation.
+    </p>
+  </div>
+
+  <div class="diagram" data-label="Fig. 03c — Les lags en pratique">
+    <svg viewBox="0 0 720 200" xmlns="http://www.w3.org/2000/svg">
+      <!-- Axe temps -->
+      <line x1="20" y1="100" x2="700" y2="100" stroke="#c9bfa8" stroke-width="1.5"/>
+
+      <!-- Points passés -->
+      <!-- t-7j -->
+      <circle cx="60" cy="75" r="5" fill="#c9bfa8" stroke="#6b7585" stroke-width="1.5"/>
+      <text class="diag-text-mono" x="60" y="65" text-anchor="middle" font-size="10" fill="#6b7585">83</text>
+      <text class="diag-text-tiny" x="60" y="115" text-anchor="middle">t − 7 jours</text>
+      <text class="diag-text-tiny" x="60" y="128" text-anchor="middle">lag_2016</text>
+
+      <!-- t-24h -->
+      <circle cx="200" cy="68" r="5" fill="#c9bfa8" stroke="#6b7585" stroke-width="1.5"/>
+      <text class="diag-text-mono" x="200" y="58" text-anchor="middle" font-size="10" fill="#6b7585">91</text>
+      <text class="diag-text-tiny" x="200" y="115" text-anchor="middle">t − 24h</text>
+      <text class="diag-text-tiny" x="200" y="128" text-anchor="middle">lag_288</text>
+
+      <!-- t-6h -->
+      <circle cx="340" cy="72" r="5" fill="#c9bfa8" stroke="#6b7585" stroke-width="1.5"/>
+      <text class="diag-text-mono" x="340" y="62" text-anchor="middle" font-size="10" fill="#6b7585">87</text>
+      <text class="diag-text-tiny" x="340" y="115" text-anchor="middle">t − 6h</text>
+      <text class="diag-text-tiny" x="340" y="128" text-anchor="middle">lag_72</text>
+
+      <!-- t-1h -->
+      <circle cx="460" cy="60" r="5" fill="#2c5282" stroke="#2c5282" stroke-width="1.5"/>
+      <text class="diag-text-mono" x="460" y="50" text-anchor="middle" font-size="10" fill="#2c5282">95</text>
+      <text class="diag-text-tiny" x="460" y="115" text-anchor="middle">t − 1h</text>
+      <text class="diag-text-tiny" x="460" y="128" text-anchor="middle">lag_12</text>
+
+      <!-- t-5min -->
+      <circle cx="560" cy="55" r="5" fill="#1d6b6b" stroke="#1d6b6b" stroke-width="1.5"/>
+      <text class="diag-text-mono" x="560" y="45" text-anchor="middle" font-size="10" fill="#1d6b6b">97</text>
+      <text class="diag-text-tiny" x="560" y="115" text-anchor="middle">t − 5min</text>
+      <text class="diag-text-tiny" x="560" y="128" text-anchor="middle">lag_1</text>
+
+      <!-- Point à prédire -->
+      <circle cx="640" cy="52" r="8" fill="none" stroke="#c8511c" stroke-width="2.5" stroke-dasharray="4,3"/>
+      <text style="font-family:JetBrains Mono,monospace;font-size:11px;fill:#c8511c;font-weight:600" x="640" y="42" text-anchor="middle">?</text>
+      <text class="diag-text-small" x="640" y="115" text-anchor="middle" fill="#c8511c">t (à prédire)</text>
+
+      <!-- Flèches de contribution -->
+      <line x1="60" y1="80" x2="630" y2="80" stroke="#e8d8b0" stroke-width="1" stroke-dasharray="3,5"/>
+      <line x1="200" y1="73" x2="630" y2="73" stroke="#e8d8b0" stroke-width="1" stroke-dasharray="3,5"/>
+      <line x1="460" y1="65" x2="630" y2="65" stroke="#a8c8e8" stroke-width="1" stroke-dasharray="3,5"/>
+      <line x1="560" y1="60" x2="630" y2="60" stroke="#a8d8c8" stroke-width="1.5" stroke-dasharray="3,5"/>
+
+      <!-- Légende en bas -->
+      <text class="diag-text-small" x="360" y="165" text-anchor="middle">Tous ces points passés sont des features d'entrée du modèle</text>
+      <text class="diag-text-small" x="360" y="183" text-anchor="middle">Plus le lag est récent, plus il est informatif pour prédire t</text>
+    </svg>
+    <div class="diagram-caption">
+      6 lags sont utilisés : 5 min, 15 min, 1h, 6h, 24h et 7 jours en arrière.
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════
+       4. MAE / MAPE : MESURER LA QUALITÉ
+  ════════════════════════════════════════════════════ -->
+  <h2>Comment mesurer la qualité : MAE et MAPE</h2>
+
+  <p>
+    Pour savoir si le modèle est bon, on compare ses prédictions aux vraies valeurs
+    sur le jeu de test (les 3 derniers mois, non vus pendant l'entraînement).
+    Deux métriques résument cette erreur :
+  </p>
+
+  <div class="metrics-grid">
+    <div class="metric">
+      <div class="metric-label">MAE — Mean Absolute Error</div>
+      <div class="metric-value">2,81</div>
+      <div class="metric-explain">
+        <strong>Erreur absolue moyenne.</strong> En moyenne, le modèle se trompe
+        de <strong>2,81 m³/h</strong> par prédiction.
+        <br><br>
+        Si le débit réel est 90 m³/h et qu'on prédit 87,2 m³/h,
+        l'erreur est 2,8 m³/h — c'est ça que mesure la MAE.
+        <br><br>
+        Facile à interpréter car exprimé dans la même unité que le débit.
+      </div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">MAPE — Mean Absolute Percentage Error</div>
+      <div class="metric-value">4,12%</div>
+      <div class="metric-explain">
+        <strong>Erreur relative moyenne.</strong> En moyenne, on se trompe
+        de <strong>4,12%</strong> du débit réel.
+        <br><br>
+        Si le débit réel est 90 m³/h, une erreur de 4,12%
+        représente ± 3,7 m³/h. Si le débit est 50 m³/h, c'est ± 2,1 m³/h.
+        <br><br>
+        Utile pour comparer des PR de tailles différentes (un grand PR a
+        des débits absolus bien plus élevés qu'un petit).
+      </div>
+    </div>
+  </div>
+
+  <div class="explain-box">
+    <div class="label">Comment interpréter 4,12% sur de l'eau ?</div>
+    <p>
+      En hydraulique urbaine, un MAPE en dessous de <strong>5–8%</strong> est
+      généralement considéré comme bon pour un modèle basé sur des données historiques.
+      En dessous de <strong>3%</strong> est excellent.
+      Ces chiffres sont sur données simulées (propres) — sur tes vraies données
+      avec des pannes capteur et anomalies, compte plutôt 6–12%.
+    </p>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════
+       5. RÉSULTATS : CT vs LT
+  ════════════════════════════════════════════════════ -->
+  <h2>Court terme vs long terme</h2>
+
+  <div class="compare-row">
+    <div class="compare-cell">
+      <h3>Avec lags — court terme</h3>
+      <p style="font-size:0.9rem;color:var(--ink-mute);margin-bottom:12px;">
+        Utilise les vraies valeurs passées (lag_1, lag_288…).
+        Très précis mais inutilisable au-delà de quelques heures si on
+        n'a pas les vraies mesures futures.
+      </p>
+      <div class="val">2,81</div><div class="lbl">MAE · m³/h</div><br><br>
+      <div class="val">4,12%</div><div class="lbl">MAPE</div>
+    </div>
+    <div class="compare-cell">
+      <h3>Sans lags — long terme</h3>
+      <p style="font-size:0.9rem;color:var(--ink-mute);margin-bottom:12px;">
+        N'utilise que l'heure, le jour, le mois, la saison…
+        Légèrement meilleur ici car les patterns calendaires dominent.
+        Utilisable à n'importe quel horizon (demain, dans 6 mois).
+      </p>
+      <div class="val" style="color:var(--green)">2,74</div><div class="lbl">MAE · m³/h</div><br><br>
+      <div class="val" style="color:var(--green)">4,01%</div><div class="lbl">MAPE</div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

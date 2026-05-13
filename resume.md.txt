@@ -1,0 +1,28 @@
+Le contexte de votre problème
+Vous avez une série temporelle classique en hydraulique urbaine : débits mesurés sur des postes de relevage (PR) toutes les 5 minutes sur 2 ans. Cela représente environ 210 000 points par PR, ce qui est très confortable pour faire du machine learning.
+La consommation d'eau urbaine a des patterns très marqués et prévisibles, ce qui est une bonne nouvelle :
+
+Cyclicité journalière : pics du matin (6h-9h) et du soir (18h-21h), creux nocturne
+Cyclicité hebdomadaire : weekends différents des jours ouvrés
+Cyclicité annuelle : été vs hiver, vacances scolaires
+Effets météo : température, pluie (arrosage des jardins)
+Jours fériés : profils particuliers
+
+Approches possibles, du plus simple au plus sophistiqué
+1. Modèles "naïfs" mais souvent étonnamment bons
+La moyenne historique conditionnée par (jour de la semaine, heure, mois) donne déjà une baseline solide. Toujours commencer par là pour avoir un point de comparaison.
+2. Modèles statistiques de séries temporelles
+SARIMA, Prophet (de Meta) ou ETS. Prophet est particulièrement adapté car il gère nativement les saisonnalités multiples et les jours fériés français.
+3. Machine Learning avec features temporelles
+Gradient Boosting (XGBoost, LightGBM, CatBoost) en transformant le problème en régression supervisée. On crée des features : heure, jour de la semaine, mois, jour de l'année, sin/cos pour la cyclicité, lags (consommation à t-1, t-24h, t-7j), moyennes mobiles, jours fériés, vacances scolaires, météo si disponible. C'est souvent le meilleur rapport performance/complexité.
+4. Deep Learning
+LSTM, GRU, ou modèles type Temporal Fusion Transformer. Plus complexe, gain souvent marginal sur ce type de données très cycliques.
+Ma recommandation par défaut
+Pour un projet d'eau urbaine, je commencerais par LightGBM avec des features temporelles riches. C'est :
+
+Rapide à entraîner
+Très interprétable (importance des variables)
+Robuste aux valeurs aberrantes (utile car il y a souvent des soucis de capteurs)
+Excellent sur ce type de patterns
+
+Une fois vos réponses reçues, je peux vous préparer un notebook complet adapté à votre cas, avec génération de données d'exemple si vous voulez tester avant d'utiliser vos vraies données. Voulez-vous aussi que j'intègre des variables météo (Météo France propose une API gratuite) ? C'est souvent ce qui fait passer un modèle de "bon" à "très bon" pour l'eau.

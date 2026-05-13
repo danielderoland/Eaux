@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Modèle naïf — Moyenne historique conditionnée</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f5f1e8;
+    --paper-dark: #ebe5d4;
+    --ink: #1a2332;
+    --ink-soft: #3d4859;
+    --ink-mute: #6b7585;
+    --accent: #c8511c;
+    --accent-soft: #e8a87c;
+    --teal: #1d6b6b;
+    --rule: #c9bfa8;
+    --rule-soft: #ddd4bd;
+    --green: #4a6b3a;
+    --blue: #2c5282;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    font-size: 17px;
+    line-height: 1.65;
+  }
+  .container { max-width: 880px; margin: 0 auto; padding: 60px 48px 120px; }
+
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--ink-mute);
+    text-decoration: none;
+    margin-bottom: 48px;
+    border-bottom: 1px dotted var(--rule);
+    padding-bottom: 2px;
+    transition: color 0.2s;
+  }
+  .back-link:hover { color: var(--accent); border-bottom-color: var(--accent); }
+
+  .badge {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--paper);
+    background: var(--ink);
+    padding: 4px 12px;
+    margin-bottom: 24px;
+  }
+
+  .badge-num { color: var(--accent); font-size: 1.2em; }
+
+  h1 {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(2.2rem, 5vw, 3.4rem);
+    font-weight: 400;
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    margin-bottom: 20px;
+    font-variation-settings: "opsz" 144;
+  }
+  h1 em { font-style: italic; color: var(--accent); }
+
+  .subtitle {
+    font-family: 'Fraunces', serif;
+    font-size: 1.2rem;
+    font-style: italic;
+    font-weight: 300;
+    color: var(--ink-soft);
+    max-width: 600px;
+    margin-bottom: 48px;
+    padding-bottom: 48px;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  h2 {
+    font-family: 'Fraunces', serif;
+    font-size: 1.9rem;
+    font-weight: 500;
+    letter-spacing: -0.015em;
+    color: var(--ink);
+    margin: 56px 0 20px;
+    font-variation-settings: "opsz" 100;
+  }
+  h3 {
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    margin: 36px 0 12px;
+  }
+  p { margin-bottom: 18px; color: var(--ink-soft); }
+  p strong { color: var(--ink); font-weight: 600; }
+
+  .diagram {
+    background: #fefcf6;
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    padding: 36px 28px 28px;
+    margin: 36px 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .diagram::before {
+    content: attr(data-label);
+    position: absolute;
+    top: 0; left: 0;
+    background: var(--ink);
+    color: var(--paper);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    padding: 6px 14px;
+  }
+  .diagram-caption {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 0.95rem;
+    color: var(--ink-mute);
+    text-align: center;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--rule-soft);
+  }
+  svg { max-width: 100%; height: auto; display: block; margin: 0 auto; }
+  .diag-text { font-family: 'Inter', sans-serif; font-size: 14px; fill: var(--ink); font-weight: 500; }
+  .diag-text-small { font-family: 'Inter', sans-serif; font-size: 12px; fill: var(--ink-soft); }
+  .diag-text-mono { font-family: 'JetBrains Mono', monospace; font-size: 11px; fill: var(--ink-soft); }
+
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    margin: 32px 0;
+  }
+  .metric {
+    background: var(--paper);
+    padding: 24px 20px;
+  }
+  .metric-value {
+    font-family: 'Fraunces', serif;
+    font-size: 2.2rem;
+    font-weight: 500;
+    line-height: 1;
+    color: var(--ink);
+    letter-spacing: -0.02em;
+    margin-bottom: 6px;
+    font-variation-settings: "opsz" 100;
+  }
+  .metric-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ink-mute);
+  }
+
+  .pros-cons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin: 32px 0;
+  }
+  .pros, .cons {
+    padding: 24px;
+    background: var(--paper-dark);
+    border-left: 3px solid var(--rule);
+  }
+  .pros { border-left-color: var(--green); }
+  .cons { border-left-color: var(--accent); }
+  .pros h3 { color: var(--green); }
+  .cons h3 { color: var(--accent); }
+  .pros ul, .cons ul { list-style: none; padding: 0; }
+  .pros li, .cons li {
+    font-size: 0.95rem;
+    color: var(--ink-soft);
+    padding: 5px 0;
+    padding-left: 16px;
+    position: relative;
+  }
+  .pros li::before { content: '+'; position: absolute; left: 0; color: var(--green); font-weight: 700; }
+  .cons li::before { content: '−'; position: absolute; left: 0; color: var(--accent); font-weight: 700; }
+
+  .code-block {
+    background: var(--ink);
+    color: #c9d1d9;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.7;
+    padding: 24px 28px;
+    margin: 24px 0;
+    border-radius: 2px;
+    overflow-x: auto;
+  }
+  .code-block .kw { color: #ff7b72; }
+  .code-block .fn { color: #79c0ff; }
+  .code-block .str { color: #a5d6ff; }
+  .code-block .cm { color: #6b7585; font-style: italic; }
+  .code-block .num { color: #f2cc60; }
+
+  .context-block {
+    background: var(--paper-dark);
+    border-left: 3px solid var(--accent);
+    padding: 24px 28px;
+    margin: 28px 0;
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 1.05rem;
+    color: var(--ink-soft);
+  }
+
+  @media (max-width: 640px) {
+    .container { padding: 40px 20px 80px; }
+    .pros-cons { grid-template-columns: 1fr; }
+    .metrics-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <a class="back-link" href="synthese_modele_eau.html">← Retour à la synthèse</a>
+
+  <div class="badge"><span class="badge-num">01</span> &nbsp;·&nbsp; Modèle naïf</div>
+  <h1>La moyenne <em>historique</em> conditionnée</h1>
+  <p class="subtitle">
+    La baseline indispensable — simple, transparente, et souvent étonnamment
+    compétitive sur des données très cycliques comme la consommation d'eau.
+  </p>
+
+  <h2>Principe</h2>
+  <p>
+    Pour prédire le débit à un instant t, on répond à la question :
+    <strong>quelle était la consommation à la même heure, le même jour de la semaine,
+    dans le même mois, lors des semaines précédentes ?</strong> La réponse est simplement
+    la moyenne de toutes ces observations passées.
+  </p>
+  <p>
+    La clé est la <strong>conditionnalité</strong> : on ne calcule pas une moyenne globale,
+    mais une moyenne spécifique à chaque créneau — par exemple, la moyenne de tous les
+    mardis à 8h05 en juin observés dans l'historique.
+  </p>
+
+  <div class="diagram" data-label="Fig. 01 — Construction de la baseline">
+    <svg viewBox="0 0 720 480" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="#3d4859" stroke-width="1.5" stroke-linecap="round"/>
+        </marker>
+      </defs>
+
+      <!-- Colonne historique -->
+      <text class="diag-text" x="120" y="40" text-anchor="middle">Historique 2 ans</text>
+      <rect x="30" y="58" width="180" height="44" rx="4" fill="#e8e3d3" stroke="#c9bfa8"/>
+      <text class="diag-text-mono" x="120" y="76" text-anchor="middle">Mardi 8h05 · jan. 2023</text>
+      <text class="diag-text-mono" x="120" y="91" text-anchor="middle" fill="#c8511c">82,4 m³/h</text>
+
+      <rect x="30" y="112" width="180" height="44" rx="4" fill="#e8e3d3" stroke="#c9bfa8"/>
+      <text class="diag-text-mono" x="120" y="130" text-anchor="middle">Mardi 8h05 · mar. 2023</text>
+      <text class="diag-text-mono" x="120" y="145" text-anchor="middle" fill="#c8511c">88,1 m³/h</text>
+
+      <rect x="30" y="166" width="180" height="44" rx="4" fill="#e8e3d3" stroke="#c9bfa8"/>
+      <text class="diag-text-mono" x="120" y="184" text-anchor="middle">Mardi 8h05 · jun. 2023</text>
+      <text class="diag-text-mono" x="120" y="199" text-anchor="middle" fill="#c8511c">91,7 m³/h</text>
+
+      <rect x="30" y="220" width="180" height="44" rx="4" fill="#e8e3d3" stroke="#c9bfa8"/>
+      <text class="diag-text-mono" x="120" y="238" text-anchor="middle">Mardi 8h05 · sep. 2023</text>
+      <text class="diag-text-mono" x="120" y="253" text-anchor="middle" fill="#c8511c">85,3 m³/h</text>
+
+      <text class="diag-text-small" x="120" y="285" text-anchor="middle" font-style="italic">… ~100 observations</text>
+
+      <!-- Flèche vers calcul -->
+      <line x1="215" y1="180" x2="305" y2="180" stroke="#3d4859" stroke-width="1.5" marker-end="url(#arr)"/>
+      <text class="diag-text-small" x="260" y="170" text-anchor="middle" font-style="italic">agrégation</text>
+
+      <!-- Calcul -->
+      <rect x="310" y="130" width="180" height="100" rx="6" fill="#d8e3e1" stroke="#1d6b6b"/>
+      <text class="diag-text" x="400" y="160" text-anchor="middle" fill="#0d4040">Groupby</text>
+      <text class="diag-text-small" x="400" y="178" text-anchor="middle" fill="#0d4040">(PR, jour_sem,</text>
+      <text class="diag-text-small" x="400" y="194" text-anchor="middle" fill="#0d4040">heure, minute)</text>
+      <text class="diag-text-mono" x="400" y="218" text-anchor="middle" fill="#0d4040">→ mean()</text>
+
+      <!-- Flèche vers résultat -->
+      <line x1="495" y1="180" x2="575" y2="180" stroke="#3d4859" stroke-width="1.5" marker-end="url(#arr)"/>
+
+      <!-- Résultat -->
+      <rect x="580" y="140" width="120" height="80" rx="6" fill="#f0d4b8" stroke="#c8511c" stroke-width="1.2"/>
+      <text class="diag-text" x="640" y="170" text-anchor="middle" fill="#7a3010">Prédiction</text>
+      <text class="diag-text-mono" x="640" y="190" text-anchor="middle" fill="#c8511c" font-size="13">86,9 m³/h</text>
+
+      <!-- Axe temps en bas -->
+      <line x1="30" y1="340" x2="690" y2="340" stroke="#c9bfa8" stroke-width="1"/>
+      <text class="diag-text-small" x="360" y="365" text-anchor="middle">Profil moyen d'un mardi (moyenne par demi-heure)</text>
+
+      <!-- Courbe naïf simulée -->
+      <polyline points="40,330 80,320 120,295 160,258 200,235 240,250 280,268 320,280 360,282 400,275 440,255 480,235 520,248 560,268 580,308 610,325 650,330" fill="none" stroke="#c8511c" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <text class="diag-text-small" x="650" y="300" fill="#c8511c">Profil</text>
+      <text class="diag-text-small" x="650" y="314" fill="#c8511c">mardi</text>
+
+      <!-- Annotation pic matin -->
+      <line x1="200" y1="235" x2="200" y2="215" stroke="#1d6b6b" stroke-width="1" stroke-dasharray="3,3"/>
+      <text class="diag-text-small" x="200" y="208" text-anchor="middle" fill="#1d6b6b">pic 7h30</text>
+
+      <!-- Annotation pic soir -->
+      <line x1="480" y1="235" x2="480" y2="215" stroke="#1d6b6b" stroke-width="1" stroke-dasharray="3,3"/>
+      <text class="diag-text-small" x="480" y="208" text-anchor="middle" fill="#1d6b6b">pic 19h</text>
+    </svg>
+    <div class="diagram-caption">
+      Construction de la table de référence par groupby, puis lecture directe pour prédire.
+    </div>
+  </div>
+
+  <h2>Résultats obtenus (données simulées)</h2>
+  <p>
+    Sur 3 PR, 2 ans de données, test sur les 3 derniers mois :
+  </p>
+  <div class="metrics-grid">
+    <div class="metric">
+      <div class="metric-value">3,61</div>
+      <div class="metric-label">MAE<br>(m³/h moyen)</div>
+    </div>
+    <div class="metric">
+      <div class="metric-value">4,52</div>
+      <div class="metric-label">RMSE<br>(m³/h)</div>
+    </div>
+    <div class="metric">
+      <div class="metric-value">5,68%</div>
+      <div class="metric-label">MAPE<br>(erreur relative)</div>
+    </div>
+  </div>
+  <p>
+    Ces résultats constituent la <strong>référence à battre</strong>. Tout modèle
+    plus complexe doit faire mieux, sinon il ne vaut pas la peine.
+  </p>
+
+  <h2>Comment c'est codé</h2>
+  <div class="code-block">
+<span class="cm"># 1. Calculer les moyennes historiques sur le train</span>
+baseline = train.<span class="fn">groupby</span>([<span class="str">'pr'</span>, <span class="str">'jour_semaine'</span>, <span class="str">'heure'</span>, <span class="str">'minute'</span>])[<span class="str">'debit'</span>].<span class="fn">mean</span>().<span class="fn">reset_index</span>()
+baseline.columns = [<span class="str">'pr'</span>, <span class="str">'jour_semaine'</span>, <span class="str">'heure'</span>, <span class="str">'minute'</span>, <span class="str">'pred_baseline'</span>]
+
+<span class="cm"># 2. Joindre sur le test pour prédire</span>
+test_eval = test.<span class="fn">merge</span>(baseline, <span class="kw">on</span>=[<span class="str">'pr'</span>, <span class="str">'jour_semaine'</span>, <span class="str">'heure'</span>, <span class="str">'minute'</span>], <span class="kw">how</span>=<span class="str">'left'</span>)
+
+<span class="cm"># Résultat : pour chaque ligne du test, pred_baseline est
+# la moyenne historique des mêmes (PR, jour, heure, minute)</span>
+  </div>
+  <p>
+    La table <code>baseline</code> a autant de lignes que de créneaux distincts :
+    <strong>3 PR × 7 jours × 24 h × 12 intervalles de 5 min = 6 048 lignes</strong>.
+    Chaque prédiction est une simple lecture dans cette table.
+  </p>
+
+  <h2>Forces et limites</h2>
+  <div class="pros-cons">
+    <div class="pros">
+      <h3>Points forts</h3>
+      <ul>
+        <li>Zéro paramètre à régler</li>
+        <li>Totalement transparent et explicable</li>
+        <li>Très rapide à calculer</li>
+        <li>Robuste aux valeurs aberrantes (moyenne sur ~100 obs)</li>
+        <li>Parfaite baseline de comparaison</li>
+      </ul>
+    </div>
+    <div class="cons">
+      <h3>Limites</h3>
+      <ul>
+        <li>Ignore la météo (température, pluie)</li>
+        <li>Ignore les jours fériés inhabituels</li>
+        <li>Ne s'adapte pas aux tendances longues</li>
+        <li>Créneau inconnu → pas de prédiction</li>
+        <li>Ne capture pas les interactions (ex: été + weekend)</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="context-block">
+    Sur des données d'eau très cycliques, la baseline atteint souvent 5–8 % de MAPE.
+    Un modèle ML bien réglé descend à 3–5 %. Le gain existe, mais la baseline est
+    déjà opérationnellement utilisable pour beaucoup d'usages.
+  </div>
+
+</div>
+</body>
+</html>

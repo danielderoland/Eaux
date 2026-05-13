@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deep Learning — LSTM & Transformers temporels</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f5f1e8; --paper-dark: #ebe5d4;
+    --ink: #1a2332; --ink-soft: #3d4859; --ink-mute: #6b7585;
+    --accent: #c8511c; --accent-soft: #e8a87c;
+    --teal: #1d6b6b; --rule: #c9bfa8; --rule-soft: #ddd4bd;
+    --green: #4a6b3a; --blue: #2c5282;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { background: var(--paper); color: var(--ink); font-family: 'Inter', sans-serif; font-size: 17px; line-height: 1.65; }
+  .container { max-width: 880px; margin: 0 auto; padding: 60px 48px 120px; }
+  .back-link { display: inline-flex; align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--ink-mute); text-decoration: none; margin-bottom: 48px; border-bottom: 1px dotted var(--rule); padding-bottom: 2px; transition: color 0.2s; }
+  .back-link:hover { color: var(--accent); border-bottom-color: var(--accent); }
+  .badge { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.2em; color: var(--paper); background: var(--ink); padding: 4px 12px; margin-bottom: 24px; }
+  .badge-num { color: var(--accent); font-size: 1.2em; }
+  h1 { font-family: 'Fraunces', serif; font-size: clamp(2.2rem, 5vw, 3.4rem); font-weight: 400; line-height: 1.08; letter-spacing: -0.02em; color: var(--ink); margin-bottom: 20px; font-variation-settings: "opsz" 144; }
+  h1 em { font-style: italic; color: var(--accent); }
+  .subtitle { font-family: 'Fraunces', serif; font-size: 1.2rem; font-style: italic; font-weight: 300; color: var(--ink-soft); max-width: 600px; margin-bottom: 48px; padding-bottom: 48px; border-bottom: 1px solid var(--rule); }
+  h2 { font-family: 'Fraunces', serif; font-size: 1.9rem; font-weight: 500; letter-spacing: -0.015em; color: var(--ink); margin: 56px 0 20px; font-variation-settings: "opsz" 100; }
+  h3 { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent); margin: 36px 0 12px; }
+  p { margin-bottom: 18px; color: var(--ink-soft); }
+  p strong { color: var(--ink); font-weight: 600; }
+
+  .diagram { background: #fefcf6; border: 1px solid var(--rule); border-radius: 2px; padding: 36px 28px 28px; margin: 36px 0; position: relative; overflow: hidden; }
+  .diagram::before { content: attr(data-label); position: absolute; top: 0; left: 0; background: var(--ink); color: var(--paper); font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em; padding: 6px 14px; }
+  .diagram-caption { font-family: 'Fraunces', serif; font-style: italic; font-size: 0.95rem; color: var(--ink-mute); text-align: center; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--rule-soft); }
+  svg { max-width: 100%; height: auto; display: block; margin: 0 auto; }
+  .diag-text { font-family: 'Inter', sans-serif; font-size: 13px; fill: var(--ink); font-weight: 500; }
+  .diag-text-small { font-family: 'Inter', sans-serif; font-size: 11px; fill: var(--ink-soft); }
+  .diag-text-mono { font-family: 'JetBrains Mono', monospace; font-size: 11px; fill: var(--ink-soft); }
+
+  .verdict-card { background: var(--ink); color: var(--paper); padding: 40px; margin: 40px 0; border-radius: 2px; }
+  .verdict-card h3 { color: var(--accent-soft); margin-top: 0; }
+  .verdict-card p { color: rgba(245, 241, 232, 0.8); }
+  .verdict-card strong { color: var(--paper); }
+
+  .compare-table { width: 100%; border-collapse: collapse; margin: 28px 0; font-size: 0.93rem; }
+  .compare-table th { font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--ink-mute); padding: 10px 14px; border-bottom: 2px solid var(--ink); text-align: left; }
+  .compare-table td { padding: 14px; border-bottom: 1px solid var(--rule-soft); color: var(--ink-soft); }
+  .compare-table td:first-child { font-weight: 600; color: var(--ink); }
+  .compare-table tr.better td { color: var(--green); }
+  .compare-table tr.better td:first-child { color: var(--green); }
+  .compare-table tr.worse td { color: var(--accent); }
+  .compare-table tr.worse td:first-child { color: var(--accent); }
+
+  .arch-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin: 32px 0; }
+  .arch-card { background: var(--paper-dark); border: 1px solid var(--rule); padding: 20px; }
+  .arch-card h3 { margin-top: 0; color: var(--blue); }
+  .arch-card p { font-size: 0.9rem; margin-bottom: 0; }
+
+  .status-badge { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em; padding: 3px 10px; border-radius: 2px; }
+  .status-pending { background: rgba(200, 81, 28, 0.12); color: var(--accent); }
+
+  .code-block { background: var(--ink); color: #c9d1d9; font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.7; padding: 24px 28px; margin: 24px 0; border-radius: 2px; overflow-x: auto; }
+  .code-block .kw { color: #ff7b72; }
+  .code-block .fn { color: #79c0ff; }
+  .code-block .str { color: #a5d6ff; }
+  .code-block .cm { color: #6b7585; font-style: italic; }
+  .code-block .num { color: #f2cc60; }
+
+  @media (max-width: 640px) { .container { padding: 40px 20px 80px; } .arch-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <a class="back-link" href="synthese_modele_eau.html">← Retour à la synthèse</a>
+
+  <div class="badge"><span class="badge-num">04</span> &nbsp;·&nbsp; Deep Learning</div>
+  <h1>Réseaux de neurones — <em>LSTM</em> & Transformers temporels</h1>
+  <p class="subtitle">
+    L'approche la plus puissante sur le papier, mais souvent surdimensionnée
+    pour des séries temporelles très cycliques comme la consommation d'eau.
+    Ici non implémentée — voici pourquoi et comment.
+  </p>
+
+  <div class="verdict-card">
+    <h3>Verdict pour ce projet</h3>
+    <p>
+      Sur des données d'eau urbaine à <strong>3 PR</strong> avec des patterns très
+      réguliers, le deep learning apportera vraisemblablement un gain
+      <strong>marginal (−1 à −2% de MAPE)</strong> au prix d'une complexité
+      bien supérieure : GPU recommandé, hyperparamètres nombreux, temps
+      d'entraînement long, modèle opaque.
+    </p>
+    <p>
+      À utiliser <strong>seulement si</strong> LightGBM et Prophet ont été épuisés
+      et qu'il reste un gap de performance significatif à combler.
+    </p>
+  </div>
+
+  <h2>Principe : lire la séquence brute</h2>
+  <p>
+    Au lieu de construire des features manuellement (heure, sin/cos…), le deep
+    learning reçoit directement la <strong>séquence brute des valeurs passées</strong>
+    et apprend tout seul à détecter les motifs utiles.
+  </p>
+
+  <div class="diagram" data-label="Fig. 04 — Architecture LSTM dépliée">
+    <svg viewBox="0 0 720 440" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arr4" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="#3d4859" stroke-width="1.5" stroke-linecap="round"/>
+        </marker>
+        <marker id="arr4b" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="#1d6b6b" stroke-width="1.5" stroke-linecap="round"/>
+        </marker>
+      </defs>
+
+      <!-- Titre étapes -->
+      <text class="diag-text-small" x="360" y="28" text-anchor="middle" font-style="italic">Séquence d'entrée : débits mesurés toutes les 5 min (fenêtre de 288 pas = 24h)</text>
+
+      <!-- Entrées -->
+      <rect x="20" y="50" width="85" height="38" rx="4" fill="#d6e2ed" stroke="#2c5282" stroke-width="0.8"/>
+      <text class="diag-text-mono" x="62" y="69" text-anchor="middle" fill="#1a3a5c">t-12 · 78</text>
+      <rect x="115" y="50" width="85" height="38" rx="4" fill="#d6e2ed" stroke="#2c5282" stroke-width="0.8"/>
+      <text class="diag-text-mono" x="157" y="69" text-anchor="middle" fill="#1a3a5c">t-11 · 82</text>
+      <rect x="210" y="50" width="85" height="38" rx="4" fill="#d6e2ed" stroke="#2c5282" stroke-width="0.8"/>
+      <text class="diag-text-mono" x="252" y="69" text-anchor="middle" fill="#1a3a5c">t-10 · 85</text>
+      <text class="diag-text-small" x="330" y="69" text-anchor="middle" fill="#6b7585">···</text>
+      <rect x="350" y="50" width="85" height="38" rx="4" fill="#d6e2ed" stroke="#2c5282" stroke-width="0.8"/>
+      <text class="diag-text-mono" x="392" y="69" text-anchor="middle" fill="#1a3a5c">t-2 · 91</text>
+      <rect x="445" y="50" width="85" height="38" rx="4" fill="#d8e3e1" stroke="#1d6b6b" stroke-width="1.2"/>
+      <text class="diag-text-mono" x="487" y="69" text-anchor="middle" fill="#0d4040">t-1 · 94</text>
+
+      <!-- Flèches vers cellules -->
+      <line x1="62" y1="90" x2="62" y2="140" stroke="#3d4859" stroke-width="1" marker-end="url(#arr4)"/>
+      <line x1="157" y1="90" x2="157" y2="140" stroke="#3d4859" stroke-width="1" marker-end="url(#arr4)"/>
+      <line x1="252" y1="90" x2="252" y2="140" stroke="#3d4859" stroke-width="1" marker-end="url(#arr4)"/>
+      <line x1="392" y1="90" x2="392" y2="140" stroke="#3d4859" stroke-width="1" marker-end="url(#arr4)"/>
+      <line x1="487" y1="90" x2="487" y2="140" stroke="#3d4859" stroke-width="1" marker-end="url(#arr4)"/>
+
+      <!-- Cellules LSTM -->
+      <rect x="20" y="145" width="85" height="70" rx="6" fill="#d8e3e1" stroke="#1d6b6b" stroke-width="0.8"/>
+      <text class="diag-text" x="62" y="172" text-anchor="middle" fill="#0d4040">LSTM</text>
+      <text class="diag-text-small" x="62" y="188" text-anchor="middle" fill="#0d4040">porte oubli</text>
+      <text class="diag-text-small" x="62" y="202" text-anchor="middle" fill="#0d4040">+ mémoire</text>
+
+      <rect x="115" y="145" width="85" height="70" rx="6" fill="#d8e3e1" stroke="#1d6b6b" stroke-width="0.8"/>
+      <text class="diag-text" x="157" y="172" text-anchor="middle" fill="#0d4040">LSTM</text>
+      <text class="diag-text-small" x="157" y="188" text-anchor="middle" fill="#0d4040">porte oubli</text>
+      <text class="diag-text-small" x="157" y="202" text-anchor="middle" fill="#0d4040">+ mémoire</text>
+
+      <rect x="210" y="145" width="85" height="70" rx="6" fill="#d8e3e1" stroke="#1d6b6b" stroke-width="0.8"/>
+      <text class="diag-text" x="252" y="172" text-anchor="middle" fill="#0d4040">LSTM</text>
+      <text class="diag-text-small" x="252" y="188" text-anchor="middle" fill="#0d4040">porte oubli</text>
+      <text class="diag-text-small" x="252" y="202" text-anchor="middle" fill="#0d4040">+ mémoire</text>
+
+      <text class="diag-text-small" x="330" y="185" text-anchor="middle" fill="#6b7585">···</text>
+
+      <rect x="350" y="145" width="85" height="70" rx="6" fill="#d8e3e1" stroke="#1d6b6b" stroke-width="0.8"/>
+      <text class="diag-text" x="392" y="172" text-anchor="middle" fill="#0d4040">LSTM</text>
+      <text class="diag-text-small" x="392" y="188" text-anchor="middle" fill="#0d4040">porte oubli</text>
+      <text class="diag-text-small" x="392" y="202" text-anchor="middle" fill="#0d4040">+ mémoire</text>
+
+      <rect x="445" y="145" width="85" height="70" rx="6" fill="#1d6b6b" stroke="#1d6b6b" stroke-width="0.8"/>
+      <text class="diag-text" x="487" y="172" text-anchor="middle" fill="#f5f1e8">LSTM</text>
+      <text class="diag-text-small" x="487" y="188" text-anchor="middle" fill="#c9e8e8">dernière cellule</text>
+      <text class="diag-text-small" x="487" y="202" text-anchor="middle" fill="#c9e8e8">→ état final</text>
+
+      <!-- Flèches horizontales mémoire -->
+      <line x1="108" y1="180" x2="115" y2="180" stroke="#1d6b6b" stroke-width="2" marker-end="url(#arr4b)"/>
+      <line x1="203" y1="180" x2="210" y2="180" stroke="#1d6b6b" stroke-width="2" marker-end="url(#arr4b)"/>
+      <line x1="298" y1="180" x2="320" y2="180" stroke="#1d6b6b" stroke-width="2" stroke-dasharray="4,3"/>
+      <line x1="345" y1="180" x2="350" y2="180" stroke="#1d6b6b" stroke-width="2" marker-end="url(#arr4b)"/>
+      <line x1="438" y1="180" x2="445" y2="180" stroke="#1d6b6b" stroke-width="2" marker-end="url(#arr4b)"/>
+
+      <!-- Annotation mémoire -->
+      <path d="M30 145 Q30 110 110 110 L440 110 Q530 110 530 145" stroke="#a87820" stroke-width="1" fill="none" stroke-dasharray="5,4"/>
+      <text class="diag-text-small" x="280" y="106" text-anchor="middle" fill="#a87820">État de la mémoire long terme (cell state)</text>
+
+      <!-- Sortie -->
+      <line x1="487" y1="218" x2="487" y2="275" stroke="#3d4859" stroke-width="1.5" marker-end="url(#arr4)"/>
+      <rect x="430" y="275" width="115" height="55" rx="6" fill="#1a2332"/>
+      <text class="diag-text" x="487" y="298" text-anchor="middle" fill="#f5f1e8">Dense layer</text>
+      <text class="diag-text-small" x="487" y="316" text-anchor="middle" fill="#c9bfa8">1 neurone → ŷ</text>
+
+      <line x1="487" y1="333" x2="487" y2="370" stroke="#3d4859" stroke-width="1.5" marker-end="url(#arr4)"/>
+      <rect x="435" y="373" width="105" height="44" rx="6" fill="#f0d4b8" stroke="#c8511c" stroke-width="1.2"/>
+      <text class="diag-text" x="487" y="393" text-anchor="middle" fill="#7a3010">Prédiction</text>
+      <text class="diag-text-mono" x="487" y="408" text-anchor="middle" fill="#c8511c">t : 97 m³/h</text>
+
+      <!-- Annotation boîte noire -->
+      <rect x="580" y="145" width="120" height="180" rx="4" fill="none" stroke="#c9bfa8" stroke-dasharray="6,4"/>
+      <text class="diag-text-small" x="640" y="170" text-anchor="middle" fill="#6b7585">Boîte noire :</text>
+      <text class="diag-text-small" x="640" y="186" text-anchor="middle" fill="#6b7585">on ne sait pas</text>
+      <text class="diag-text-small" x="640" y="202" text-anchor="middle" fill="#6b7585">ce que chaque</text>
+      <text class="diag-text-small" x="640" y="218" text-anchor="middle" fill="#6b7585">cellule a appris</text>
+      <text class="diag-text-small" x="640" y="240" text-anchor="middle" fill="#c8511c">SHAP partiel</text>
+      <text class="diag-text-small" x="640" y="256" text-anchor="middle" fill="#c8511c">possible mais</text>
+      <text class="diag-text-small" x="640" y="272" text-anchor="middle" fill="#c8511c">coûteux</text>
+    </svg>
+    <div class="diagram-caption">
+      Chaque cellule LSTM transmet à la suivante un "état de mémoire" — le réseau retient
+      le contexte des dernières heures pour prédire le pas suivant.
+    </div>
+  </div>
+
+  <h2>Les 3 architectures possibles</h2>
+  <div class="arch-grid">
+    <div class="arch-card">
+      <h3>LSTM</h3>
+      <p>Long Short-Term Memory. Cellules récurrentes avec portes d'oubli/entrée. Robuste, entraînable sur CPU. Point de départ recommandé.</p>
+    </div>
+    <div class="arch-card">
+      <h3>GRU</h3>
+      <p>Gated Recurrent Unit. Version simplifiée du LSTM (moins de paramètres). Souvent aussi bon, plus rapide à entraîner.</p>
+    </div>
+    <div class="arch-card">
+      <h3>TFT</h3>
+      <p>Temporal Fusion Transformer. État de l'art actuel. Interprétable (attention heads). Nécessite GPU et beaucoup de données.</p>
+    </div>
+  </div>
+
+  <h2>Comparaison avec LightGBM</h2>
+  <table class="compare-table">
+    <thead><tr><th>Critère</th><th>LightGBM</th><th>LSTM / TFT</th></tr></thead>
+    <tbody>
+      <tr class="better"><td>Entraînement</td><td>Quelques secondes, CPU</td><td>Minutes–heures, GPU recommandé</td></tr>
+      <tr class="better"><td>Feature engineering</td><td>Nécessaire (mais simple)</td><td>Optionnel</td></tr>
+      <tr class="worse"><td>Interprétabilité</td><td>Importance features + SHAP</td><td>Boîte noire (SHAP partiel)</td></tr>
+      <tr><td>Performance (eau)</td><td>MAPE ~4%</td><td>MAPE ~3–4% (gain marginal)</td></tr>
+      <tr class="worse"><td>Hyperparamètres</td><td>~5 à régler</td><td>20+ (taille LSTM, dropout, lr…)</td></tr>
+      <tr class="better"><td>Valeurs manquantes</td><td>Natif</td><td>Nécessite imputation préalable</td></tr>
+      <tr class="better"><td>Déploiement</td><td>Simple (pickle)</td><td>Complexe (ONNX, serveur GPU)</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Code LSTM (à implémenter si nécessaire)</h2>
+  <p><span class="status-badge status-pending">Non implémenté</span></p>
+  <div class="code-block">
+<span class="cm"># pip install torch  ou  pip install tensorflow</span>
+<span class="kw">import</span> torch
+<span class="kw">import</span> torch.nn <span class="kw">as</span> nn
+
+<span class="kw">class</span> <span class="fn">LSTMDebit</span>(nn.Module):
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, input_size=<span class="num">1</span>, hidden=<span class="num">64</span>, layers=<span class="num">2</span>):
+        super().<span class="fn">__init__</span>()
+        self.lstm = nn.<span class="fn">LSTM</span>(input_size, hidden, layers, batch_first=<span class="kw">True</span>, dropout=<span class="num">0.2</span>)
+        self.fc   = nn.<span class="fn">Linear</span>(hidden, <span class="num">1</span>)
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, x):
+        out, _ = self.<span class="fn">lstm</span>(x)
+        <span class="kw">return</span> self.<span class="fn">fc</span>(out[:, -<span class="num">1</span>, :])   <span class="cm"># dernière cellule → prédiction</span>
+
+<span class="cm"># Entrée : fenêtres glissantes de 288 pas (24h) → prédire le pas suivant</span>
+<span class="cm"># X.shape = (N_samples, 288, 1)   y.shape = (N_samples, 1)</span>
+  </div>
+
+  <p>
+    La vraie difficulté du LSTM n'est pas le code — c'est la <strong>création des fenêtres
+    glissantes</strong>, le choix de la taille de fenêtre (24h ? 48h ? 7j ?),
+    la normalisation des données, et le réglage du learning rate scheduler.
+    Pour l'eau urbaine, commence par LightGBM et Prophet — ils feront 95% du chemin
+    avec 5% de la complexité.
+  </p>
+
+</div>
+</body>
+</html>
