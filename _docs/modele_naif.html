@@ -234,6 +234,7 @@
     .pros-cons { grid-template-columns: 1fr; }
     .metrics-grid { grid-template-columns: 1fr 1fr; }
   }
+  abbr[title] { text-decoration: underline dotted var(--ink-mute); text-underline-offset: 3px; cursor: help; }
 </style>
 </head>
 <body>
@@ -332,20 +333,20 @@
 
   <h2>Résultats obtenus (données simulées)</h2>
   <p>
-    Sur 3 PR, 2 ans de données, test sur les 3 derniers mois :
+    Sur 3 <abbr title="Poste de Relevage — station de pompage qui régule les flux d'eau dans le réseau">PR</abbr>, 2 ans de données, test sur les 3 derniers mois :
   </p>
   <div class="metrics-grid">
     <div class="metric">
       <div class="metric-value">3,61</div>
-      <div class="metric-label">MAE<br>(m³/h moyen)</div>
+      <div class="metric-label"><abbr title="Mean Absolute Error — erreur absolue moyenne : écart moyen en m³/h entre prédit et réel">MAE</abbr><br>(m³/h moyen)</div>
     </div>
     <div class="metric">
       <div class="metric-value">4,52</div>
-      <div class="metric-label">RMSE<br>(m³/h)</div>
+      <div class="metric-label"><abbr title="Root Mean Square Error — comme la MAE mais pénalise davantage les grosses erreurs (racine de la moyenne des erreurs au carré)">RMSE</abbr><br>(m³/h)</div>
     </div>
     <div class="metric">
       <div class="metric-value">5,68%</div>
-      <div class="metric-label">MAPE<br>(erreur relative)</div>
+      <div class="metric-label"><abbr title="Mean Absolute Percentage Error — erreur relative moyenne en % du débit réel : utile pour comparer des PR de tailles différentes">MAPE</abbr><br>(erreur relative)</div>
     </div>
   </div>
   <p>
@@ -396,8 +397,8 @@ test_eval = test.<span class="fn">merge</span>(baseline, <span class="kw">on</sp
   </div>
 
   <div class="context-block">
-    Sur des données d'eau très cycliques, la baseline atteint souvent 5–8 % de MAPE.
-    Un modèle ML bien réglé descend à 3–5 %. Le gain existe, mais la baseline est
+    Sur des données d'eau très cycliques, la baseline atteint souvent 5–8 % de <abbr title="Mean Absolute Percentage Error — erreur relative moyenne en % du débit réel">MAPE</abbr>.
+    Un modèle <abbr title="Machine Learning — apprentissage automatique par exemple par arbres de décision ou réseaux de neurones">ML</abbr> bien réglé descend à 3–5 %. Le gain existe, mais la baseline est
     déjà opérationnellement utilisable pour beaucoup d'usages.
   </div>
 

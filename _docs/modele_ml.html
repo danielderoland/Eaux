@@ -94,6 +94,7 @@
     .compare-row { grid-template-columns: 1fr; }
     .metrics-grid { grid-template-columns: 1fr; }
   }
+  abbr[title] { text-decoration: underline dotted var(--ink-mute); text-underline-offset: 3px; cursor: help; }
 </style>
 </head>
 <body>
@@ -523,7 +524,7 @@
   <!-- ═══════════════════════════════════════════════════
        4. MAE / MAPE : MESURER LA QUALITÉ
   ════════════════════════════════════════════════════ -->
-  <h2>Comment mesurer la qualité : MAE et MAPE</h2>
+  <h2>Comment mesurer la qualité : <abbr title="Mean Absolute Error — erreur absolue moyenne en m³/h entre la valeur prédite et la valeur réelle">MAE</abbr> et <abbr title="Mean Absolute Percentage Error — erreur relative moyenne en % du débit réel">MAPE</abbr></h2>
 
   <p>
     Pour savoir si le modèle est bon, on compare ses prédictions aux vraies valeurs
@@ -555,7 +556,7 @@
         Si le débit réel est 90 m³/h, une erreur de 4,12%
         représente ± 3,7 m³/h. Si le débit est 50 m³/h, c'est ± 2,1 m³/h.
         <br><br>
-        Utile pour comparer des PR de tailles différentes (un grand PR a
+        Utile pour comparer des <abbr title="Postes de Relevage — stations de pompage qui régulent les flux d'eau dans le réseau">PR</abbr> de tailles différentes (un grand <abbr title="Poste de Relevage — station de pompage du réseau de distribution">PR</abbr> a
         des débits absolus bien plus élevés qu'un petit).
       </div>
     </div>
@@ -579,24 +580,24 @@
 
   <div class="compare-row">
     <div class="compare-cell">
-      <h3>Avec lags — court terme</h3>
+      <h3>Avec lags — <abbr title="Court Terme : prédiction sur quelques minutes à quelques heures, en utilisant les mesures récentes (lags) comme entrée">court terme</abbr></h3>
       <p style="font-size:0.9rem;color:var(--ink-mute);margin-bottom:12px;">
         Utilise les vraies valeurs passées (lag_1, lag_288…).
         Très précis mais inutilisable au-delà de quelques heures si on
         n'a pas les vraies mesures futures.
       </p>
-      <div class="val">2,81</div><div class="lbl">MAE · m³/h</div><br><br>
-      <div class="val">4,12%</div><div class="lbl">MAPE</div>
+      <div class="val">2,81</div><div class="lbl"><abbr title="Mean Absolute Error — erreur absolue moyenne en m³/h entre prédit et réel">MAE</abbr> · m³/h</div><br><br>
+      <div class="val">4,12%</div><div class="lbl"><abbr title="Mean Absolute Percentage Error — erreur relative moyenne en % du débit réel">MAPE</abbr></div>
     </div>
     <div class="compare-cell">
-      <h3>Sans lags — long terme</h3>
+      <h3>Sans lags — <abbr title="Long Terme : prédiction à des horizons de plusieurs jours ou mois, sans avoir besoin des mesures passées récentes">long terme</abbr></h3>
       <p style="font-size:0.9rem;color:var(--ink-mute);margin-bottom:12px;">
         N'utilise que l'heure, le jour, le mois, la saison…
         Légèrement meilleur ici car les patterns calendaires dominent.
         Utilisable à n'importe quel horizon (demain, dans 6 mois).
       </p>
-      <div class="val" style="color:var(--green)">2,74</div><div class="lbl">MAE · m³/h</div><br><br>
-      <div class="val" style="color:var(--green)">4,01%</div><div class="lbl">MAPE</div>
+      <div class="val" style="color:var(--green)">2,74</div><div class="lbl"><abbr title="Mean Absolute Error — erreur absolue moyenne en m³/h entre prédit et réel">MAE</abbr> · m³/h</div><br><br>
+      <div class="val" style="color:var(--green)">4,01%</div><div class="lbl"><abbr title="Mean Absolute Percentage Error — erreur relative moyenne en % du débit réel">MAPE</abbr></div>
     </div>
   </div>
 

@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Comparaison des méthodes — Eau urbaine 5 min</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f5f1e8; --paper-dark: #ebe5d4;
+    --ink: #1a2332; --ink-soft: #3d4859; --ink-mute: #6b7585;
+    --accent: #c8511c; --accent-soft: #e8a87c;
+    --teal: #1d6b6b; --rule: #c9bfa8; --rule-soft: #ddd4bd;
+    --green: #4a6b3a; --blue: #2c5282;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { background: var(--paper); color: var(--ink); font-family: 'Inter', sans-serif; font-size: 17px; line-height: 1.65; }
+  .container { max-width: 920px; margin: 0 auto; padding: 64px 48px 120px; }
+
+  .back-link { display: inline-flex; align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--ink-mute); text-decoration: none; margin-bottom: 48px; border-bottom: 1px dotted var(--rule); padding-bottom: 2px; transition: color 0.2s; }
+  .back-link:hover { color: var(--accent); }
+
+  .badge { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.2em; color: var(--paper); background: var(--ink); padding: 4px 12px; margin-bottom: 24px; }
+
+  h1 { font-family: 'Fraunces', serif; font-size: clamp(2.2rem, 5vw, 3.2rem); font-weight: 400; line-height: 1.08; letter-spacing: -0.02em; color: var(--ink); margin-bottom: 18px; font-variation-settings: "opsz" 144; }
+  h1 em { font-style: italic; color: var(--accent); }
+  .subtitle { font-family: 'Fraunces', serif; font-size: 1.1rem; font-style: italic; font-weight: 300; color: var(--ink-soft); max-width: 620px; margin-bottom: 56px; padding-bottom: 48px; border-bottom: 1px solid var(--rule); }
+
+  section { margin-bottom: 72px; scroll-margin-top: 40px; }
+  .section-num { font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.2em; color: var(--accent); margin-bottom: 12px; display: flex; align-items: center; gap: 12px; }
+  .section-num::after { content: ''; flex: 1; height: 1px; background: var(--rule); max-width: 80px; }
+
+  h2 { font-family: 'Fraunces', serif; font-weight: 500; font-size: 2rem; line-height: 1.15; letter-spacing: -0.015em; color: var(--ink); margin-bottom: 24px; font-variation-settings: "opsz" 100; }
+  h3 { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent); margin: 32px 0 12px; }
+  p { margin-bottom: 16px; color: var(--ink-soft); }
+  p strong { color: var(--ink); }
+
+  /* Diagram wrapper */
+  .diagram { background: #fefcf6; border: 1px solid var(--rule); border-radius: 2px; padding: 36px 28px 28px; margin: 32px 0; position: relative; overflow: hidden; }
+  .diagram::before { content: attr(data-label); position: absolute; top: 0; left: 0; background: var(--ink); color: var(--paper); font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em; padding: 6px 14px; }
+  .diagram-caption { font-family: 'Fraunces', serif; font-style: italic; font-size: 0.92rem; color: var(--ink-mute); text-align: center; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--rule-soft); }
+
+  /* Context block */
+  .context-block { background: var(--paper-dark); border-left: 3px solid var(--accent); padding: 24px 28px; margin: 28px 0; font-family: 'Fraunces', serif; font-style: italic; font-size: 1rem; line-height: 1.6; color: var(--ink-soft); }
+  .context-block .label { font-family: 'JetBrains Mono', monospace; font-style: normal; font-size: 10px; text-transform: uppercase; letter-spacing: 0.2em; color: var(--accent); margin-bottom: 10px; display: block; }
+
+  /* Data spec badges */
+  .specs { display: flex; gap: 12px; flex-wrap: wrap; margin: 20px 0; }
+  .spec-tag { font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--ink-soft); background: var(--paper-dark); border: 1px solid var(--rule); padding: 5px 12px; }
+  .spec-tag strong { color: var(--accent); }
+
+  /* Table */
+  .table-wrap { margin: 28px 0; overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  th { text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--ink-mute); padding: 12px 14px; border-bottom: 2px solid var(--ink); white-space: nowrap; }
+  th:first-child { text-align: left; }
+  th.col-best { color: var(--accent); border-bottom-color: var(--accent); }
+  td { padding: 14px 14px; border-bottom: 1px solid var(--rule-soft); color: var(--ink-soft); text-align: center; vertical-align: middle; }
+  td:first-child { text-align: left; font-family: 'Inter', sans-serif; font-size: 0.88rem; font-weight: 600; color: var(--ink); white-space: nowrap; }
+  td.best { color: var(--accent); font-weight: 600; }
+  tr:hover td { background: rgba(200,81,28,0.03); }
+  .stars { letter-spacing: 1px; color: var(--accent); font-size: 0.8rem; }
+  .stars .off { color: var(--rule); }
+  .tag { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; padding: 2px 8px; border-radius: 2px; }
+  .tag-yes { background: rgba(74,107,58,0.12); color: var(--green); }
+  .tag-no  { background: rgba(107,117,133,0.10); color: var(--ink-mute); }
+  .tag-mid { background: rgba(44,82,130,0.10); color: var(--blue); }
+
+  /* Use-case cards */
+  .use-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin: 28px 0; }
+  .use-card { background: var(--paper-dark); border: 1px solid var(--rule); padding: 24px 20px; position: relative; }
+  .use-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--rule); }
+  .use-card.best::before { background: var(--accent); }
+  .use-card.alt::before { background: var(--blue); }
+  .use-card.skip::before { background: var(--ink-mute); }
+  .use-card h4 { font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--ink-mute); margin-bottom: 10px; }
+  .use-card .uc-title { font-family: 'Fraunces', serif; font-size: 1.1rem; color: var(--ink); margin-bottom: 10px; font-variation-settings: "opsz" 36; }
+  .use-card .uc-winner { font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 10px; }
+  .use-card.best .uc-winner { color: var(--accent); }
+  .use-card.alt  .uc-winner { color: var(--blue); }
+  .use-card.skip .uc-winner { color: var(--ink-mute); }
+  .use-card p { font-size: 0.88rem; color: var(--ink-soft); margin-bottom: 0; }
+
+  /* Verdict */
+  .verdict-block { background: var(--ink); color: var(--paper); padding: 40px 36px; margin: 40px 0; border-radius: 2px; }
+  .verdict-block h3 { color: var(--accent-soft); font-family: 'Fraunces', serif; font-size: 1.6rem; font-style: italic; font-weight: 300; text-transform: none; letter-spacing: 0; margin-bottom: 20px; }
+  .verdict-block p { color: rgba(245,241,232,0.78); margin-bottom: 14px; }
+  .verdict-block p strong { color: var(--accent-soft); }
+
+  .stack-row { display: flex; align-items: baseline; gap: 16px; padding: 14px 0; border-top: 1px solid rgba(255,255,255,0.08); }
+  .stack-row:first-of-type { border-top: none; margin-top: 24px; }
+  .stack-num { font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.2em; color: var(--accent); min-width: 28px; }
+  .stack-txt { font-size: 0.95rem; color: rgba(245,241,232,0.78); }
+  .stack-txt strong { color: var(--paper); }
+
+  @media (max-width: 700px) { .container { padding: 40px 20px 80px; } .use-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <a class="back-link" href="synthese_modele_eau.html">← Retour à la synthèse</a>
+
+  <div class="badge">Comparaison méthodes</div>
+  <h1>Quatre modèles, <em>une seule application</em></h1>
+  <p class="subtitle">
+    Analyse comparative appliquée au réseau d'eau urbaine :
+    mesures à 5 min sur 2 ans, objectif prévision + détection d'anomalie.
+  </p>
+
+  <!-- CONTEXTE -->
+  <div class="context-block">
+    <span class="label">Cadre de comparaison</span>
+    Toutes les évaluations ci-dessous sont calibrées pour votre contexte précis.
+    Les chiffres de <abbr title="Mean Absolute Percentage Error — erreur relative moyenne en % du débit réel">MAPE</abbr> sont des ordres de grandeur représentatifs pour de l'eau urbaine
+    avec des patterns fortement cycliques — pas des benchmarks universels.
+  </div>
+  <div class="specs">
+    <div class="spec-tag"><strong>5 min</strong> — granularité</div>
+    <div class="spec-tag"><strong>2 ans</strong> — historique</div>
+    <div class="spec-tag"><strong>2–10 PR</strong> — postes de relevage</div>
+    <div class="spec-tag"><strong>3 saisonnalités</strong> — jour, semaine, année</div>
+    <div class="spec-tag"><strong>Objectif double</strong> — prévision + anomalie</div>
+  </div>
+
+  <!-- RADAR -->
+  <section id="radar">
+    <div class="section-num">Section 01</div>
+    <h2>Vue d'ensemble multi-critères</h2>
+    <p>
+      Six axes couvrant les dimensions clés pour votre application.
+      Un modèle idéal remplirait tout l'hexagone — aucun n'est parfait.
+    </p>
+
+    <div class="diagram" data-label="Fig. 01 — Radar comparatif : 4 modèles × 6 critères">
+      <canvas id="rc" width="680" height="460" style="display:block;width:100%;max-width:680px;height:auto;margin:0 auto;"></canvas>
+      <div class="diagram-caption">
+        Scores sur 10 pour chaque critère. Échelle non linéaire : un gain de 2 à 4 est aussi significatif qu'un gain de 8 à 10.
+      </div>
+    </div>
+  </section>
+
+  <!-- TABLEAU DÉTAILLÉ -->
+  <section id="tableau">
+    <div class="section-num">Section 02</div>
+    <h2>Comparaison détaillée</h2>
+    <p>
+      Dix critères spécifiques à votre situation. La colonne <em style="color:var(--accent)">LightGBM</em>
+      est mise en avant : c'est le modèle recommandé pour la prévision principale.
+    </p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Critère</th>
+            <th>Baseline</th>
+            <th>Prophet</th>
+            <th class="col-best">LightGBM ★</th>
+            <th>LSTM</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><abbr title="Mean Absolute Percentage Error — erreur relative moyenne en % du débit réel">MAPE</abbr> indicatif — horizon 24 h</td>
+            <td>10–13 %</td>
+            <td>5–8 %</td>
+            <td class="best">3–5 %</td>
+            <td>4–7 %</td>
+          </tr>
+          <tr>
+            <td><abbr title="Mean Absolute Percentage Error — erreur relative moyenne en % du débit réel">MAPE</abbr> indicatif — horizon 1 h</td>
+            <td>4–6 %</td>
+            <td>7–10 %</td>
+            <td class="best">2–4 %</td>
+            <td>2–4 %</td>
+          </tr>
+          <tr>
+            <td>Réaction aux valeurs récentes</td>
+            <td><span class="tag tag-no">Non</span></td>
+            <td><span class="tag tag-no">Non</span></td>
+            <td><span class="tag tag-mid">Lags</span></td>
+            <td><span class="tag tag-yes">Oui</span></td>
+          </tr>
+          <tr>
+            <td>Saisonnalités multiples (j / s / a)</td>
+            <td><span class="stars">★★<span class="off">★★★</span></span></td>
+            <td><span class="stars">★★★★★</span></td>
+            <td class="best"><span class="stars">★★★★★</span></td>
+            <td><span class="stars">★★★<span class="off">★★</span></span></td>
+          </tr>
+          <tr>
+            <td>Jours fériés &amp; événements ponctuels</td>
+            <td><span class="tag tag-no">Partiel</span></td>
+            <td><span class="tag tag-yes">Natif</span></td>
+            <td><span class="tag tag-yes">Feature</span></td>
+            <td><span class="tag tag-no">Difficile</span></td>
+          </tr>
+          <tr>
+            <td>Intégration météo (température, pluie)</td>
+            <td><span class="tag tag-no">Non</span></td>
+            <td><span class="tag tag-no">Non</span></td>
+            <td class="best"><span class="tag tag-yes">Natif</span></td>
+            <td><span class="tag tag-mid">Possible</span></td>
+          </tr>
+          <tr>
+            <td>Temps d'entraînement (2 ans, 1 PR)</td>
+            <td>&lt; 1 s</td>
+            <td>1–5 min</td>
+            <td class="best">10–60 s</td>
+            <td>30 min – 2 h</td>
+          </tr>
+          <tr>
+            <td>Feature engineering requis</td>
+            <td><span class="tag tag-no">Aucun</span></td>
+            <td><span class="tag tag-no">Aucun</span></td>
+            <td><span class="tag tag-mid">Modéré</span></td>
+            <td><span class="tag tag-no">Minimal</span></td>
+          </tr>
+          <tr>
+            <td>Interprétabilité pour un exploitant</td>
+            <td><span class="stars">★★★★★</span></td>
+            <td><span class="stars">★★★★★</span></td>
+            <td><span class="stars">★★★★<span class="off">★</span></span> <small style="color:var(--ink-mute)">(<abbr title="SHapley Additive exPlanations — méthode qui mesure la contribution de chaque variable à chaque prédiction">SHAP</abbr>)</small></td>
+            <td><span class="stars">★<span class="off">★★★★</span></span></td>
+          </tr>
+          <tr>
+            <td>Robustesse aux données manquantes</td>
+            <td><span class="stars">★★★★<span class="off">★</span></span></td>
+            <td class="best"><span class="stars">★★★★★</span></td>
+            <td><span class="stars">★★★★<span class="off">★</span></span></td>
+            <td><span class="stars">★★<span class="off">★★★</span></span></td>
+          </tr>
+          <tr>
+            <td>Détection d'anomalie / fuite</td>
+            <td><span class="tag tag-no">Seuil fixe</span></td>
+            <td><span class="tag tag-yes">Résidu</span></td>
+            <td class="best"><span class="tag tag-yes">Résidu + <abbr title="Interquartile — détection d'anomalies par la plage entre le 1er et le 3e quartile (Q1–Q3)">IQ</abbr></span></td>
+            <td><span class="tag tag-mid">Possible</span></td>
+          </tr>
+          <tr>
+            <td>Besoin de <abbr title="Graphics Processing Unit — processeur graphique, accélère l'entraînement des réseaux de neurones">GPU</abbr></td>
+            <td><span class="tag tag-yes">Non</span></td>
+            <td><span class="tag tag-yes">Non</span></td>
+            <td class="best"><span class="tag tag-yes">Non</span></td>
+            <td><span class="tag tag-no">Recommandé</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- PAR USAGE -->
+  <section id="usages">
+    <div class="section-num">Section 03</div>
+    <h2>Quel modèle pour quel usage ?</h2>
+    <p>
+      Votre application couvre trois besoins distincts — chacun a son modèle optimal.
+    </p>
+
+    <div class="use-grid">
+
+      <div class="use-card best">
+        <h4>Usage 01</h4>
+        <div class="uc-title">Prévision opérationnelle J+1 à J+7</div>
+        <div class="uc-winner">→ LightGBM</div>
+        <p>
+          Gestion des pompes, anticipation des pics de demande, coordination avec le
+          traitement. LightGBM capture les interactions (été&nbsp;×&nbsp;weekend,
+          chaleur&nbsp;×&nbsp;heure) que Prophet suppose indépendantes.
+          Ajouter la température en feature réduit le <abbr title="Mean Absolute Percentage Error — erreur relative moyenne en % du débit réel">MAPE</abbr> de ~2 points en été.
+        </p>
+      </div>
+
+      <div class="use-card alt">
+        <h4>Usage 02</h4>
+        <div class="uc-title">Surveillance temps réel &amp; détection fuite</div>
+        <div class="uc-winner">→ Résidu Prophet + seuil</div>
+        <p>
+          Prophet prédit le « normal attendu » à chaque instant. Le résidu
+          <code style="font-family:'JetBrains Mono',monospace;font-size:0.82rem">y(t) − ŷ(t)</code>
+          est surveillé : un écart persistant supérieur à 2–3 σ sur plusieurs
+          mesures consécutives signale une anomalie de débit (fuite potentielle,
+          capteur défaillant, branchement clandestin).
+        </p>
+      </div>
+
+      <div class="use-card alt">
+        <h4>Usage 03</h4>
+        <div class="uc-title">Rapport mensuel &amp; analyse exploitant</div>
+        <div class="uc-winner">→ Prophet</div>
+        <p>
+          La décomposition Prophet est directement lisible par un non-spécialiste :
+          « la consommation de juillet est supérieure de +18 % à la tendance annuelle,
+          principalement portée par le cycle journalier ». Les graphiques de composantes
+          sont des supports de rapport prêts à l'emploi.
+        </p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- PERFORMANCE PAR HORIZON -->
+  <section id="horizons">
+    <div class="section-num">Section 04</div>
+    <h2>Performance selon l'horizon de prévision</h2>
+    <p>
+      MAPE indicatif en fonction du délai de prévision pour de l'eau urbaine
+      avec des patterns journaliers marqués. Plus la barre est courte, meilleure est la précision.
+    </p>
+
+    <div class="diagram" data-label="Fig. 02 — MAPE estimé par horizon (ordres de grandeur)">
+      <canvas id="hc" width="720" height="320" style="display:block;width:100%;max-width:720px;height:auto;margin:0 auto;"></canvas>
+      <div class="diagram-caption">
+        Valeurs indicatives sur données eau urbaine typiques. Baseline = même créneau J−1.
+        Prophet perd en précision court terme (ignore les données récentes).
+        LightGBM reste stable grâce aux lags calibrés.
+      </div>
+    </div>
+  </section>
+
+  <!-- VERDICT -->
+  <section id="verdict">
+    <div class="section-num">Section 05</div>
+    <h2>Architecture recommandée</h2>
+    <p>
+      Pour votre application, un modèle unique ne suffit pas : les trois usages ont
+      des exigences contradictoires. La réponse est une <strong>pile à deux niveaux</strong>.
+    </p>
+
+    <div class="verdict-block">
+      <h3>La pile recommandée pour votre réseau</h3>
+
+      <div class="stack-row">
+        <div class="stack-num">01</div>
+        <div class="stack-txt">
+          <strong>LightGBM comme moteur de prévision principal.</strong>
+          Entraîné sur heure, jour, mois, lag 24h, lag 7j, température.
+          Produit les prévisions H+1 à J+7 avec intervalle de confiance (régression quantile).
+        </div>
+      </div>
+      <div class="stack-row">
+        <div class="stack-num">02</div>
+        <div class="stack-txt">
+          <strong>Prophet pour la décomposition et le reporting.</strong>
+          Exécuté mensuellement pour visualiser les tendances et produire
+          les rapports exploitants. Les coefficients Fourier révèlent si les habitudes
+          de consommation ont évolué.
+        </div>
+      </div>
+      <div class="stack-row">
+        <div class="stack-num">03</div>
+        <div class="stack-txt">
+          <strong>Surveillance du résidu LightGBM en temps réel.</strong>
+          Si |y(t) − ŷ(t)| dépasse 2,5 σ sur 3 mesures consécutives (15 min),
+          déclencher une alerte. Ce seuil est calibré par PR pour éviter les fausses alarmes.
+        </div>
+      </div>
+      <div class="stack-row">
+        <div class="stack-num">04</div>
+        <div class="stack-txt">
+          <strong>Baseline (moyenne historique) comme sanity check permanent.</strong>
+          Si LightGBM fait pire que la baseline sur la période de test, quelque chose
+          est cassé (fuite de données futures, bug dans les features, dérive de capteur).
+        </div>
+      </div>
+    </div>
+
+    <p>
+      <abbr title="Long Short-Term Memory — réseau de neurones récurrent capable de mémoriser des dépendances à long terme dans une série temporelle">LSTM</abbr> et <abbr title="Seasonal AutoRegressive Integrated Moving Average — modèle statistique classique pour séries temporelles avec une saisonnalité">SARIMA</abbr> ne sont pas inclus dans cette architecture. <abbr title="Long Short-Term Memory — réseau de neurones récurrent capable de mémoriser des dépendances à long terme dans une série temporelle">LSTM</abbr> ajoute une
+      complexité opérationnelle (<abbr title="Graphics Processing Unit — processeur graphique, accélère l'entraînement des réseaux de neurones">GPU</abbr>, temps de réentraînement, instabilité de calibration)
+      sans gain mesurable sur ce type de données. <abbr title="Seasonal AutoRegressive Integrated Moving Average — modèle statistique classique pour séries temporelles avec une saisonnalité">SARIMA</abbr> avec <code style="font-family:'JetBrains Mono',monospace;font-size:0.9em">s=288</code>
+      (période 24h en pas de 5 min) est difficile à calibrer et fragile aux trous de mesure.
+    </p>
+  </section>
+
+</div>
+
+<script>
+/* ── Radar chart ───────────────────────────────────────────────────── */
+(function () {
+  var el = document.getElementById('rc'); if (!el) return;
+  var W=680, H=460;
+  var D = Math.min(window.devicePixelRatio||1, 2);
+  el.width = W*D; el.height = H*D;
+  var ctx = el.getContext('2d'); ctx.scale(D,D);
+
+  var cx=290, cy=230, R=148;
+  var axes = ['Précision\n24 h','Réactivité\ncourt terme','Interprét-\nabilité','Simplicité\nd\'usage','Détection\nanomalies','Robustesse\nmanquants'];
+  var N=6;
+  var models = [
+    {name:'Baseline',  color:'#6b7585', scores:[4,5,10,10,3,8]},
+    {name:'Prophet',   color:'#2c5282', scores:[7,4,9,8,6,9]},
+    {name:'LightGBM',  color:'#c8511c', scores:[9,8,7,6,8,8]},
+    {name:'LSTM',      color:'#1d6b6b', scores:[8,9,2,2,7,4]}
+  ];
+
+  ctx.fillStyle='#fefcf6'; ctx.fillRect(0,0,W,H);
+
+  /* grid rings */
+  for (var ring=1; ring<=5; ring++) {
+    ctx.beginPath();
+    for (var i=0; i<N; i++) {
+      var ang=i/N*2*Math.PI-Math.PI/2;
+      var rr=R*ring/5;
+      var x=cx+rr*Math.cos(ang), y=cy+rr*Math.sin(ang);
+      if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    }
+    ctx.closePath();
+    ctx.strokeStyle = ring===5 ? '#c9bfa8' : '#ddd4bd';
+    ctx.lineWidth = ring===5 ? 1 : 0.5;
+    ctx.stroke();
+    ctx.fillStyle='#c9bfa8'; ctx.font='8px JetBrains Mono,monospace'; ctx.textAlign='left';
+    ctx.fillText(ring*2+'', cx+4, cy-R*ring/5+3);
+  }
+
+  /* axes */
+  for (var i=0; i<N; i++) {
+    var ang=i/N*2*Math.PI-Math.PI/2;
+    ctx.strokeStyle='#c9bfa8'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx+R*Math.cos(ang), cy+R*Math.sin(ang)); ctx.stroke();
+    var lx=cx+(R+30)*Math.cos(ang), ly=cy+(R+30)*Math.sin(ang);
+    var lines=axes[i].split('\n');
+    var ca=Math.cos(ang);
+    ctx.fillStyle='#3d4859'; ctx.font='9px JetBrains Mono,monospace';
+    ctx.textAlign = ca>0.15?'left': (ca<-0.15?'right':'center');
+    lines.forEach(function(l,li){
+      ctx.fillText(l, lx, ly+(li-(lines.length-1)/2)*12);
+    });
+  }
+
+  /* polygons */
+  models.forEach(function(m) {
+    ctx.beginPath();
+    m.scores.forEach(function(s,i){
+      var ang=i/N*2*Math.PI-Math.PI/2;
+      var rr=s/10*R;
+      var x=cx+rr*Math.cos(ang), y=cy+rr*Math.sin(ang);
+      if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    });
+    ctx.closePath();
+    ctx.fillStyle=m.color+'20'; ctx.fill();
+    ctx.strokeStyle=m.color; ctx.lineWidth=1.5; ctx.stroke();
+    m.scores.forEach(function(s,i){
+      var ang=i/N*2*Math.PI-Math.PI/2;
+      var rr=s/10*R;
+      ctx.beginPath(); ctx.arc(cx+rr*Math.cos(ang), cy+rr*Math.sin(ang), 3.5, 0, 2*Math.PI);
+      ctx.fillStyle=m.color; ctx.fill();
+    });
+  });
+
+  /* legend */
+  var lx=W-148, ly=56;
+  models.forEach(function(m,i){
+    ctx.strokeStyle=m.color; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(lx,ly+i*26+2); ctx.lineTo(lx+18,ly+i*26+2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(lx+9,ly+i*26+2, 3.5, 0, 2*Math.PI);
+    ctx.fillStyle=m.color; ctx.fill();
+    ctx.fillStyle='#3d4859'; ctx.font='10px JetBrains Mono,monospace'; ctx.textAlign='left';
+    ctx.fillText(m.name, lx+26, ly+i*26+6);
+  });
+})();
+
+/* ── Horizon bar chart ─────────────────────────────────────────────── */
+(function () {
+  var el = document.getElementById('hc'); if (!el) return;
+  var W=720, H=320;
+  var D = Math.min(window.devicePixelRatio||1, 2);
+  el.width = W*D; el.height = H*D;
+  var ctx = el.getContext('2d'); ctx.scale(D,D);
+
+  var horizons = ['5 min','1 h','6 h','24 h','7 j'];
+  /* MAPE values per model per horizon */
+  var models = [
+    {name:'Baseline',  color:'#6b7585', mape:[2.5, 5,  8,  11,  13]},
+    {name:'Prophet',   color:'#2c5282', mape:[8,   8,  7,   6.5, 8]},
+    {name:'LightGBM',  color:'#c8511c', mape:[2,   3.5,4,   4.5, 6]},
+    {name:'LSTM',      color:'#1d6b6b', mape:[1.5, 3,  5,   6,  10]}
+  ];
+
+  var ML=56, MR=24, MT=40, MB=56;
+  var PW=W-ML-MR, PH=H-MT-MB;
+  var NH=horizons.length, NM=models.length;
+  var groupW=PW/NH;
+  var bw=groupW*0.16, bGap=groupW*0.02;
+  var maxMape=14;
+
+  ctx.fillStyle='#fefcf6'; ctx.fillRect(0,0,W,H);
+
+  /* Y grid */
+  [0,2,4,6,8,10,12,14].forEach(function(v){
+    var gy=MT+PH-(v/maxMape)*PH;
+    ctx.strokeStyle='#ddd4bd'; ctx.lineWidth=0.5;
+    ctx.beginPath(); ctx.moveTo(ML,gy); ctx.lineTo(ML+PW,gy); ctx.stroke();
+    ctx.fillStyle='#6b7585'; ctx.font='8px JetBrains Mono,monospace'; ctx.textAlign='right';
+    ctx.fillText(v+'%', ML-5, gy+3);
+  });
+
+  /* Axes */
+  ctx.strokeStyle='#c9bfa8'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(ML,MT); ctx.lineTo(ML,MT+PH); ctx.lineTo(ML+PW,MT+PH); ctx.stroke();
+
+  /* Bars */
+  horizons.forEach(function(hz, hi) {
+    var gx=ML+hi*groupW;
+    var totalBarsW = NM*bw + (NM-1)*bGap;
+    var startX = gx + groupW/2 - totalBarsW/2;
+    models.forEach(function(m, mi) {
+      var bx=startX+mi*(bw+bGap);
+      var bh=m.mape[hi]/maxMape*PH;
+      var by=MT+PH-bh;
+      ctx.fillStyle=m.color; ctx.fillRect(bx, by, bw, bh);
+      /* value label */
+      ctx.fillStyle=m.color; ctx.font='8px JetBrains Mono,monospace'; ctx.textAlign='center';
+      if (bh > 14) ctx.fillText(m.mape[hi]+'%', bx+bw/2, by-3);
+    });
+    /* horizon label */
+    ctx.fillStyle='#3d4859'; ctx.font='10px JetBrains Mono,monospace'; ctx.textAlign='center';
+    ctx.fillText(hz, gx+groupW/2, MT+PH+16);
+  });
+
+  /* Y axis label */
+  ctx.save(); ctx.translate(14, MT+PH/2); ctx.rotate(-Math.PI/2);
+  ctx.fillStyle='#6b7585'; ctx.font='9px JetBrains Mono,monospace'; ctx.textAlign='center';
+  ctx.fillText('MAPE indicatif (%)', 0, 0); ctx.restore();
+
+  /* Legend */
+  var lx=ML+10, ly=MT-28;
+  models.forEach(function(m,i){
+    ctx.fillStyle=m.color; ctx.fillRect(lx+i*115, ly, 12, 10);
+    ctx.fillStyle='#3d4859'; ctx.font='9px JetBrains Mono,monospace'; ctx.textAlign='left';
+    ctx.fillText(m.name, lx+i*115+16, ly+9);
+  });
+})();
+</script>
+
+</body>
+</html>

@@ -72,6 +72,7 @@
   .code-block .num { color: #f2cc60; }
 
   @media (max-width: 640px) { .container { padding: 40px 20px 80px; } .compare-grid { grid-template-columns: 1fr; } }
+  abbr[title] { text-decoration: underline dotted var(--ink-mute); text-underline-offset: 3px; cursor: help; }
 </style>
 </head>
 <body>
@@ -80,7 +81,7 @@
   <a class="back-link" href="synthese_modele_eau.html">← Retour à la synthèse</a>
 
   <div class="badge"><span class="badge-num">02</span> &nbsp;·&nbsp; Modèle statistique</div>
-  <h1>Décomposition additive — <em>Prophet</em> & SARIMA</h1>
+  <h1>Décomposition additive — <em>Prophet</em> & <abbr title="Seasonal AutoRegressive Integrated Moving Average — modèle statistique classique pour séries temporelles avec une saisonnalité">SARIMA</abbr></h1>
   <p class="subtitle">
     Modèles conçus pour les séries temporelles : ils décomposent explicitement
     la consommation en tendance, saisonnalités et effets calendaires,
@@ -742,7 +743,7 @@
   <p>
     Pour des données avec <strong>3 saisonnalités simultanées</strong> (jour + semaine + an)
     comme tes débits de PR, <strong>Prophet est le choix naturel</strong>.
-    SARIMA nécessiterait d'imbriquer plusieurs modèles ou d'utiliser SARIMAX étendu.
+    <abbr title="Seasonal AutoRegressive Integrated Moving Average — modèle statistique classique pour séries temporelles avec une saisonnalité">SARIMA</abbr> nécessiterait d'imbriquer plusieurs modèles ou d'utiliser <abbr title="SARIMA with eXogenous variables — version étendue de SARIMA qui accepte des variables externes comme la météo">SARIMAX</abbr> étendu.
   </p>
 
   <h2>Application à nos données PR_CENTRE</h2>
@@ -796,8 +797,8 @@ forecast = m.<span class="fn">predict</span>(future)
 
   <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--rule);border:1px solid var(--rule);margin:28px 0;">
     <div style="background:var(--paper-dark);padding:10px 14px;font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:var(--ink-mute);">Modèle</div>
-    <div style="background:var(--paper-dark);padding:10px 14px;font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:var(--ink-mute);">MAE (m³/h)</div>
-    <div style="background:var(--paper-dark);padding:10px 14px;font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:var(--ink-mute);">MAPE</div>
+    <div style="background:var(--paper-dark);padding:10px 14px;font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:var(--ink-mute);"><abbr title="Mean Absolute Error — erreur absolue moyenne en m³/h">MAE</abbr> (m³/h)</div>
+    <div style="background:var(--paper-dark);padding:10px 14px;font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:var(--ink-mute);"><abbr title="Mean Absolute Percentage Error — erreur relative moyenne en %">MAPE</abbr></div>
 
     <div style="background:var(--paper);padding:14px;color:var(--ink-soft);">Prophet (additif)</div>
     <div style="background:var(--paper);padding:14px;font-family:'Fraunces',serif;font-size:1.4rem;color:var(--ink);">3,84</div>

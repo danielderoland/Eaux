@@ -69,6 +69,7 @@
   .code-block .num { color: #f2cc60; }
 
   @media (max-width: 640px) { .container { padding: 40px 20px 80px; } .arch-grid { grid-template-columns: 1fr; } }
+  abbr[title] { text-decoration: underline dotted var(--ink-mute); text-underline-offset: 3px; cursor: help; }
 </style>
 </head>
 <body>
@@ -77,7 +78,7 @@
   <a class="back-link" href="synthese_modele_eau.html">← Retour à la synthèse</a>
 
   <div class="badge"><span class="badge-num">04</span> &nbsp;·&nbsp; Deep Learning</div>
-  <h1>Réseaux de neurones — <em>LSTM</em> & Transformers temporels</h1>
+  <h1>Réseaux de neurones — <em><abbr title="Long Short-Term Memory — réseau de neurones récurrent capable de mémoriser des dépendances à long terme dans une série temporelle">LSTM</abbr></em> & Transformers temporels</h1>
   <p class="subtitle">
     L'approche la plus puissante sur le papier, mais souvent surdimensionnée
     pour des séries temporelles très cycliques comme la consommation d'eau.
@@ -87,10 +88,10 @@
   <div class="verdict-card">
     <h3>Verdict pour ce projet</h3>
     <p>
-      Sur des données d'eau urbaine à <strong>3 PR</strong> avec des patterns très
+      Sur des données d'eau urbaine à <strong>3 <abbr title="Postes de Relevage — stations de pompage du réseau de distribution">PR</abbr></strong> avec des patterns très
       réguliers, le deep learning apportera vraisemblablement un gain
-      <strong>marginal (−1 à −2% de MAPE)</strong> au prix d'une complexité
-      bien supérieure : GPU recommandé, hyperparamètres nombreux, temps
+      <strong>marginal (−1 à −2% de <abbr title="Mean Absolute Percentage Error — erreur relative moyenne en % du débit réel">MAPE</abbr>)</strong> au prix d'une complexité
+      bien supérieure : <abbr title="Graphics Processing Unit — processeur graphique, accélère l'entraînement des réseaux de neurones">GPU</abbr> recommandé, hyperparamètres nombreux, temps
       d'entraînement long, modèle opaque.
     </p>
     <p>
@@ -210,15 +211,15 @@
   <div class="arch-grid">
     <div class="arch-card">
       <h3>LSTM</h3>
-      <p>Long Short-Term Memory. Cellules récurrentes avec portes d'oubli/entrée. Robuste, entraînable sur CPU. Point de départ recommandé.</p>
+      <p>Long Short-Term Memory. Cellules récurrentes avec portes d'oubli/entrée. Robuste, entraînable sur <abbr title="Central Processing Unit — processeur central d'un ordinateur standard, sans carte graphique dédiée">CPU</abbr>. Point de départ recommandé.</p>
     </div>
     <div class="arch-card">
-      <h3>GRU</h3>
-      <p>Gated Recurrent Unit. Version simplifiée du LSTM (moins de paramètres). Souvent aussi bon, plus rapide à entraîner.</p>
+      <h3><abbr title="Gated Recurrent Unit — version allégée du LSTM, moins de paramètres, souvent aussi performant">GRU</abbr></h3>
+      <p>Version simplifiée du LSTM (moins de paramètres). Souvent aussi bon, plus rapide à entraîner.</p>
     </div>
     <div class="arch-card">
-      <h3>TFT</h3>
-      <p>Temporal Fusion Transformer. État de l'art actuel. Interprétable (attention heads). Nécessite GPU et beaucoup de données.</p>
+      <h3><abbr title="Temporal Fusion Transformer — architecture Transformer adaptée aux séries temporelles, état de l'art, interprétable via les têtes d'attention">TFT</abbr></h3>
+      <p>État de l'art actuel. Interprétable (attention heads). Nécessite GPU et beaucoup de données.</p>
     </div>
   </div>
 
@@ -226,13 +227,13 @@
   <table class="compare-table">
     <thead><tr><th>Critère</th><th>LightGBM</th><th>LSTM / TFT</th></tr></thead>
     <tbody>
-      <tr class="better"><td>Entraînement</td><td>Quelques secondes, CPU</td><td>Minutes–heures, GPU recommandé</td></tr>
+      <tr class="better"><td>Entraînement</td><td>Quelques secondes, <abbr title="Central Processing Unit — processeur central d'un ordinateur standard">CPU</abbr></td><td>Minutes–heures, <abbr title="Graphics Processing Unit — processeur graphique, accélère l'entraînement des réseaux de neurones">GPU</abbr> recommandé</td></tr>
       <tr class="better"><td>Feature engineering</td><td>Nécessaire (mais simple)</td><td>Optionnel</td></tr>
-      <tr class="worse"><td>Interprétabilité</td><td>Importance features + SHAP</td><td>Boîte noire (SHAP partiel)</td></tr>
-      <tr><td>Performance (eau)</td><td>MAPE ~4%</td><td>MAPE ~3–4% (gain marginal)</td></tr>
+      <tr class="worse"><td>Interprétabilité</td><td>Importance features + <abbr title="SHapley Additive exPlanations — méthode qui mesure la contribution de chaque variable à chaque prédiction">SHAP</abbr></td><td>Boîte noire (<abbr title="SHapley Additive exPlanations — méthode qui mesure la contribution de chaque variable à chaque prédiction">SHAP</abbr> partiel)</td></tr>
+      <tr><td>Performance (eau)</td><td><abbr title="Mean Absolute Percentage Error — erreur relative moyenne en % du débit réel">MAPE</abbr> ~4%</td><td><abbr title="Mean Absolute Percentage Error — erreur relative moyenne en % du débit réel">MAPE</abbr> ~3–4% (gain marginal)</td></tr>
       <tr class="worse"><td>Hyperparamètres</td><td>~5 à régler</td><td>20+ (taille LSTM, dropout, lr…)</td></tr>
       <tr class="better"><td>Valeurs manquantes</td><td>Natif</td><td>Nécessite imputation préalable</td></tr>
-      <tr class="better"><td>Déploiement</td><td>Simple (pickle)</td><td>Complexe (ONNX, serveur GPU)</td></tr>
+      <tr class="better"><td>Déploiement</td><td>Simple (pickle)</td><td>Complexe (<abbr title="Open Neural Network Exchange — format standard pour déployer des modèles de deep learning sans dépendre d'un framework">ONNX</abbr>, serveur <abbr title="Graphics Processing Unit — processeur graphique, accélère l'entraînement des réseaux de neurones">GPU</abbr>)</td></tr>
     </tbody>
   </table>
 

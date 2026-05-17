@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "deny": [
+      "mcp__claude_ai_Notion__notion-create-pages",
+      "mcp__claude_ai_Notion__notion-update-page",
+      "mcp__claude_ai_Notion__notion-create-database",
+      "mcp__claude_ai_Notion__notion-create-comment",
+      "mcp__claude_ai_Notion__notion-duplicate-page",
+      "mcp__claude_ai_Notion__notion-move-pages",
+      "mcp__claude_ai_Notion__notion-update-data-source",
+      "mcp__claude_ai_Notion__notion-update-view",
+      "mcp__claude_ai_Notion__notion-create-view",
+      "mcp__claude_ai_Stripe__cancel_subscription",
+      "mcp__claude_ai_Stripe__create_coupon",
+      "mcp__claude_ai_Stripe__create_customer",
+      "mcp__claude_ai_Stripe__create_invoice",
+      "mcp__claude_ai_Stripe__create_invoice_item",
+      "mcp__claude_ai_Stripe__create_payment_link",
+      "mcp__claude_ai_Stripe__create_price",
+      "mcp__claude_ai_Stripe__create_product",
+      "mcp__claude_ai_Stripe__create_refund",
+      "mcp__claude_ai_Stripe__finalize_invoice",
+      "mcp__claude_ai_Stripe__update_dispute",
+      "mcp__claude_ai_Stripe__update_subscription",
+      "mcp__claude_ai_Stripe__stripe_api_execute"
+    ]
+  }
+}

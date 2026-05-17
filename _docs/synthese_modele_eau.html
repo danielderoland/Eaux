@@ -661,6 +661,7 @@
   .fig-link:hover .diagram::before {
     background: var(--accent);
   }
+  abbr[title] { text-decoration: underline dotted var(--ink-mute); text-underline-offset: 3px; cursor: help; }
 </style>
 </head>
 <body>
@@ -701,7 +702,7 @@
     <h2>Le contexte du problème</h2>
 
     <p class="lead">
-      Vous disposez de mesures de débit sur des postes de relevage (PR), prises
+      Vous disposez de mesures de débit sur des postes de relevage (<abbr title="Poste de Relevage — station de pompage qui régule les flux d'eau dans le réseau de distribution">PR</abbr>), prises
       toutes les cinq minutes pendant deux ans. L'objectif est double : construire
       un modèle prédictif de la consommation et comprendre quels facteurs
       l'influencent.
@@ -774,7 +775,7 @@
         </p>
       </li>
       <li>
-        <h3>Modèles statistiques — Prophet, SARIMA</h3>
+        <h3>Modèles statistiques — Prophet, <abbr title="Seasonal AutoRegressive Integrated Moving Average — modèle statistique classique pour séries temporelles avec une saisonnalité">SARIMA</abbr></h3>
         <p>
           Décomposent la série en composantes additives : tendance, saisonnalité
           journalière, hebdomadaire, annuelle, jours fériés. Très interprétables,
@@ -790,7 +791,7 @@
         </p>
       </li>
       <li>
-        <h3>Deep learning — LSTM, Transformer temporel</h3>
+        <h3>Deep learning — <abbr title="Long Short-Term Memory — réseau de neurones récurrent capable de mémoriser des dépendances à long terme">LSTM</abbr>, Transformer temporel</h3>
         <p>
           Apprennent directement à partir des séquences brutes, sans feature
           engineering. Puissant mais souvent surdimensionné pour quelques PR
@@ -1178,6 +1179,13 @@
         </tbody>
       </table>
     </div>
+    <p style="text-align:right;margin-top:14px;">
+      <a href="comparaison_methodes.html"
+         style="font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:0.15em;color:var(--accent);text-decoration:none;border-bottom:1px dotted var(--accent);padding-bottom:1px;transition:opacity 0.2s;"
+         onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">
+        Comparaison approfondie pour notre application →
+      </a>
+    </p>
   </section>
 
   <!-- SECTION 5 : RECOMMANDATION -->
@@ -1200,12 +1208,12 @@
       <p>
         Ensuite, vous voulez <strong>comprendre les facteurs d'influence</strong>.
         LightGBM donne directement l'importance des variables et permet l'analyse
-        SHAP qui montre l'effet de chaque variable. Un LSTM est pratiquement
+        <abbr title="SHapley Additive exPlanations — méthode qui mesure la contribution de chaque variable à chaque prédiction individuelle">SHAP</abbr> qui montre l'effet de chaque variable. Un <abbr title="Long Short-Term Memory — réseau de neurones récurrent capable de mémoriser des dépendances à long terme dans une série temporelle">LSTM</abbr> est pratiquement
         impossible à interpréter.
       </p>
       <p>
         Enfin, en tant que débutant, vous bénéficiez d'un entraînement en
-        quelques secondes sur un ordinateur portable, sans GPU, avec une bonne
+        quelques secondes sur un ordinateur portable, sans <abbr title="Graphics Processing Unit — processeur graphique, accélère l'entraînement des réseaux de neurones">GPU</abbr>, avec une bonne
         tolérance aux valeurs manquantes ou aberrantes — fréquentes sur des
         capteurs de terrain.
       </p>
@@ -1219,8 +1227,8 @@
     </p>
 
     <div class="code-note">
-      <span class="key">Baseline</span> (moyennes historiques) ··· MAE = <span class="num">3,61</span><br>
-      <span class="key">LightGBM</span> (avec features) ········· MAE = <span class="num">2,87</span> ╱ MAPE = <span class="num">4,2 %</span>
+      <span class="key">Baseline</span> (moyennes historiques) ··· <abbr title="Mean Absolute Error — erreur absolue moyenne en m³/h entre prédit et réel">MAE</abbr> = <span class="num">3,61</span><br>
+      <span class="key">LightGBM</span> (avec features) ········· MAE = <span class="num">2,87</span> ╱ <abbr title="Mean Absolute Percentage Error — erreur relative moyenne en % du débit réel">MAPE</abbr> = <span class="num">4,2 %</span>
     </div>
 
     <p class="footnote">
